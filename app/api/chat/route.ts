@@ -25,7 +25,11 @@ export async function POST(req: Request) {
     userMessage: string
   }
 
+  const today = new Date().toISOString().split('T')[0]
+
   const systemPrompt = `You are an expense tracking assistant helping the user correct transaction data extracted from a receipt or bank slip.
+
+Today's date: ${today}
 
 Current transaction data:
 ${JSON.stringify({ amount: extraction.amount, type: extraction.type, category: extraction.category, date: extraction.date, note: extraction.note }, null, 2)}
@@ -33,14 +37,16 @@ ${JSON.stringify({ amount: extraction.amount, type: extraction.type, category: e
 Categories available: Food, Transport, Bills, Shopping, Transfer, Salary, Other
 Types: "income" (money received) or "expense" (money spent)
 
-Based on the user's message, decide what fields to update. Respond with JSON only — no markdown, no prose:
+Based on the user's message, decide what fields to update. When the user mentions any date or time reference — including "yesterday", "today", "last Monday", "3 days ago", "May 20", or any other relative or absolute expression — resolve it to YYYY-MM-DD using today's date as the reference point and include it in updates.date.
+
+Respond with JSON only — no markdown, no prose:
 {
   "message": "<friendly 1-sentence confirmation of what changed, or clarification if unclear>",
   "updates": {
     "amount": <THB number — only if changing>,
     "type": <"income" or "expense" — only if changing>,
     "category": <category string — only if changing>,
-    "date": <"YYYY-MM-DD" — only if changing>,
+    "date": "<YYYY-MM-DD — include whenever user mentions a date>",
     "note": <string — only if changing>
   }
 }
