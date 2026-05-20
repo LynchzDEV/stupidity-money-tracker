@@ -426,7 +426,7 @@ export function UploadPageClient({
       )}
 
       {/* Mode pill — above nav */}
-      <div
+      {stage !== 'confirm' && <div
         className="absolute left-0 right-0 z-10 flex justify-center"
         style={{ bottom: 156 }}
       >
@@ -454,10 +454,10 @@ export function UploadPageClient({
             </button>
           ))}
         </div>
-      </div>
+      </div>}
 
       {/* Bottom nav: Stats | Shutter | History */}
-      <div
+      {stage !== 'confirm' && <div
         className="absolute left-0 right-0 z-30 flex items-center justify-center"
         style={{ bottom: 50, gap: 36 }}
       >
@@ -518,10 +518,10 @@ export function UploadPageClient({
           </svg>
           <span style={{ fontSize: 10.5, fontWeight: 600 }}>History</span>
         </button>
-      </div>
+      </div>}
 
       {/* Gallery — corner left */}
-      <button
+      {stage !== 'confirm' && <button
         onClick={() => galleryRef.current?.click()}
         className="absolute z-40 flex items-center justify-center active:opacity-70 transition-opacity"
         style={{
@@ -535,10 +535,10 @@ export function UploadPageClient({
           <circle cx="9" cy="10" r="1.5"/>
           <path d="M21 16l-5-5-9 9"/>
         </svg>
-      </button>
+      </button>}
 
       {/* Flip — corner right */}
-      <button
+      {stage !== 'confirm' && <button
         onClick={flipCamera}
         className="absolute z-40 flex items-center justify-center active:opacity-70 transition-opacity"
         style={{
@@ -551,7 +551,7 @@ export function UploadPageClient({
           <path d="M4 7h11l-2-2M20 17H9l2 2"/>
           <path d="M4 7v3M20 17v-3"/>
         </svg>
-      </button>
+      </button>}
 
       {/* Confirm sheet */}
       {stage === 'confirm' && extraction && (
