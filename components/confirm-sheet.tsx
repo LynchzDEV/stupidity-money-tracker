@@ -106,13 +106,14 @@ export function ConfirmSheet({ extraction, previewUrl, bookName, onSave, onDisca
   return (
     <motion.div
       className="fixed inset-0 z-30 flex flex-col"
-      style={{ background: 'var(--bg)' }}
+      style={{ background: 'var(--bg)', height: '100dvh' }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.15 }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-14 pb-2 flex-shrink-0">
+      <div className="flex items-center justify-between px-4 pb-2 flex-shrink-0"
+        style={{ paddingTop: 'max(env(safe-area-inset-top), 44px)' }}>
         <button onClick={onDiscard}
           className="w-9 h-9 rounded-full flex items-center justify-center active:opacity-70 transition-opacity"
           style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}>
@@ -129,7 +130,8 @@ export function ConfirmSheet({ extraction, previewUrl, bookName, onSave, onDisca
       </div>
 
       {/* Chat scroll area */}
-      <div ref={scrollRef} className="flex-1 overflow-auto scrollbar-none px-4 pb-4 pt-2">
+      <div ref={scrollRef} className="flex-1 overflow-auto scrollbar-none px-4 pb-4 pt-2"
+        style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
 
         {/* Receipt thumbnail */}
         {previewUrl && (
@@ -288,8 +290,12 @@ export function ConfirmSheet({ extraction, previewUrl, bookName, onSave, onDisca
       </div>
 
       {/* Bottom bar */}
-      <div className="flex-shrink-0 px-4 pb-10 pt-2"
-        style={{ background: 'linear-gradient(to top, var(--bg) 70%, transparent)', borderTop: '1px solid var(--hairline)' }}>
+      <div className="flex-shrink-0 px-4 pt-2"
+        style={{
+          background: 'var(--bg)',
+          borderTop: '1px solid var(--hairline)',
+          paddingBottom: 'max(env(safe-area-inset-bottom), 16px)',
+        }}>
 
         {/* Chat input row */}
         <div className="flex gap-2 mb-2.5">
@@ -300,6 +306,10 @@ export function ConfirmSheet({ extraction, previewUrl, bookName, onSave, onDisca
             onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
             placeholder="e.g. change to ฿200, mark as income…"
             disabled={thinking}
+            inputMode="text"
+            enterKeyHint="send"
+            autoComplete="off"
+            autoCorrect="off"
             className="flex-1 h-11 rounded-2xl px-3.5 text-[14px] outline-none disabled:opacity-50"
             style={{ background: 'var(--surface)', border: '1px solid var(--hairline2)', color: 'var(--ink)' }}
           />

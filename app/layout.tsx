@@ -13,6 +13,11 @@ const instrumentSerif = Instrument_Serif({
 export const metadata: Metadata = {
   title: 'SlipTrack',
   description: 'Receipt → ledger in 2 taps',
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    viewportFit: 'cover',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
