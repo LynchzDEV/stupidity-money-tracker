@@ -51,6 +51,8 @@ export function HistoryClient({ book, transactions: initial, query }: { book: Bo
   const [txs, setTxs] = useState(initial)
   const [editing, setEditing] = useState<Transaction | null>(null)
 
+  useEffect(() => { setTxs(initial) }, [initial])
+
   function applyFilters(q: string, chip: string) {
     const params = new URLSearchParams()
     if (q) params.set('q', q)
