@@ -301,30 +301,97 @@ export function UploadPageClient({
         </div>
       )}
 
-      {/* Starting spinner */}
+      {/* Starting — aperture + sonar rings */}
       {cameraState === 'starting' && (
-        <div
-          className="absolute inset-0 flex items-center justify-center"
-          style={{ background: '#0c0d0a' }}
-        >
-          <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-white animate-spin" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center"
+          style={{ background: 'radial-gradient(ellipse 60% 50% at 50% 52%, rgba(14,92,58,.18) 0%, #0c0d0a 70%)' }}>
+          {/* Sonar rings */}
+          <div className="relative flex items-center justify-center" style={{ width: 120, height: 120 }}>
+            {[0, 0.55, 1.1].map((delay, i) => (
+              <div key={i} className="absolute rounded-full" style={{
+                inset: 0,
+                border: '1.5px solid rgba(14,92,58,.55)',
+                animation: `ring-out 1.8s ease-out ${delay}s infinite`,
+              }} />
+            ))}
+            {/* Aperture — slow spin */}
+            <div style={{ animation: 'aperture-spin 6s linear infinite' }}>
+              <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                {Array.from({ length: 6 }, (_, i) => {
+                  const angle = (i * 60 * Math.PI) / 180
+                  const cx = 32 + 10 * Math.cos(angle)
+                  const cy = 32 + 10 * Math.sin(angle)
+                  return (
+                    <ellipse key={i} cx={cx} cy={cy} rx={11} ry={5}
+                      transform={`rotate(${i * 60 + 30} ${cx} ${cy})`}
+                      fill="rgba(255,255,255,.16)" stroke="rgba(255,255,255,.32)" strokeWidth={0.8} />
+                  )
+                })}
+                <circle cx="32" cy="32" r="4.5" fill="rgba(255,255,255,.55)" />
+              </svg>
+            </div>
+          </div>
+          <div className="mt-7 text-[12.5px] font-medium tracking-widest uppercase"
+            style={{ color: 'rgba(255,255,255,.38)', letterSpacing: '0.1em' }}>
+            Starting camera
+            {[0, 1, 2].map(i => (
+              <span key={i} style={{
+                display: 'inline-block', marginLeft: 3,
+                animation: `pulse-dot 1.4s ease-in-out ${i * 0.22}s infinite`,
+              }}>·</span>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Thinking dim overlay */}
+      {/* Thinking — preview + scan line + corner brackets */}
       {stage === 'thinking' && (
-        <div
-          className="absolute inset-0 z-10 flex items-center justify-center"
-          style={{ background: 'rgba(0,0,0,.6)' }}
-        >
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-5"
+          style={{ background: 'rgba(0,0,0,.72)' }}>
           {previewUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={previewUrl}
-              alt=""
-              className="max-h-64 rounded-xl object-contain opacity-70"
-            />
+            <div className="relative rounded-2xl overflow-hidden"
+              style={{ maxWidth: 220, boxShadow: '0 0 0 1px rgba(255,255,255,.15), 0 16px 40px rgba(0,0,0,.6)' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={previewUrl} alt="" className="block max-h-64 object-contain opacity-80"
+                style={{ maxWidth: 220 }} />
+              {/* Scan line */}
+              <div className="absolute left-0 right-0 h-[2px] pointer-events-none"
+                style={{
+                  background: 'linear-gradient(90deg, transparent 0%, rgba(14,92,58,.9) 30%, rgba(100,255,180,.9) 50%, rgba(14,92,58,.9) 70%, transparent 100%)',
+                  boxShadow: '0 0 8px 2px rgba(14,92,58,.6)',
+                  animation: 'scan-line 1.6s linear infinite',
+                }} />
+              {/* Corner brackets */}
+              {([[0,0],[0,1],[1,0],[1,1]] as [number,number][]).map(([v,h], k) => (
+                <div key={k} style={{
+                  position: 'absolute',
+                  [v ? 'bottom' : 'top']: 6,
+                  [h ? 'right' : 'left']: 6,
+                  width: 14, height: 14,
+                  borderTop: !v ? '2px solid rgba(14,255,120,.7)' : undefined,
+                  borderBottom: v ? '2px solid rgba(14,255,120,.7)' : undefined,
+                  borderLeft: !h ? '2px solid rgba(14,255,120,.7)' : undefined,
+                  borderRight: h ? '2px solid rgba(14,255,120,.7)' : undefined,
+                  borderTopLeftRadius: !v && !h ? 4 : 0,
+                  borderTopRightRadius: !v && h ? 4 : 0,
+                  borderBottomLeftRadius: v && !h ? 4 : 0,
+                  borderBottomRightRadius: v && h ? 4 : 0,
+                } as React.CSSProperties} />
+              ))}
+            </div>
           )}
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1">
+              {[0,1,2].map(i => (
+                <div key={i} className="w-1.5 h-1.5 rounded-full"
+                  style={{ background: 'var(--accent)', animation: `pulse-dot 1.1s ease-in-out ${i * 0.18}s infinite` }} />
+              ))}
+            </div>
+            <span className="text-[12.5px] font-medium tracking-wide"
+              style={{ color: 'rgba(255,255,255,.55)', letterSpacing: '0.06em' }}>
+              Reading {captureMode === 'Bank slip' ? 'slip' : 'receipt'}
+            </span>
+          </div>
         </div>
       )}
 
