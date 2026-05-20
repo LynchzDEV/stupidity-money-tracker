@@ -33,12 +33,18 @@ JSON shape:
 
 Rules:
 - Handle Thai text (KBank=ธนาคารกสิกรไทย, SCB=ไทยพาณิชย์, KTB=กรุงไทย, BBL=กรุงเทพ)
-- For bank transfer slips: sender account number shown first = expense, receiver shown last = income
+- For bank transfer slips: sender account shown = expense; receiver account / "ได้รับเงิน" / "รับเงินสำเร็จ" / "ReceiveMoney" / "Transfer successful" to your account = income
+- PromptPay QR received (QR code on slip, "รับชำระ", "ยืนยันการรับเงิน", amount received) = income, category Transfer
+- Paper receipts (7-Eleven, Grab Food, restaurant, etc.) = expense
+- Salary / payroll slips = income, category Salary
 - If a field is not determinable, omit it (except confidence object which is always required)
 - amount is ALWAYS in THB as a plain decimal number (e.g. 500.00 not "500 บาท")
 `
 
-export async function extractFromImage(base64Image: string): Promise<ExtractionResult> {
+export async function extractFromImage(base64Image: string, mode: 'receipt' | 'bank_slip' = 'receipt'): Promise<ExtractionResult> {
+  const userText = mode === 'bank_slip'
+    ? 'Extract transaction data from this bank transfer slip (KBank/SCB/KTB/BBL e-slip). Focus on amount and date; type/category may be ambiguous.'
+    : 'Extract transaction data from this receipt.'
   const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -46,13 +52,13 @@ export async function extractFromImage(base64Image: string): Promise<ExtractionR
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'google/gemini-2.0-flash-001',
+      model: process.env.OPENROUTER_MODEL ?? 'google/gemini-2.0-flash-001',
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         {
           role: 'user',
           content: [
-            { type: 'text', text: 'Extract transaction data from this receipt.' },
+            { type: 'text', text: userText },
             { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${base64Image}` } },
           ],
         },

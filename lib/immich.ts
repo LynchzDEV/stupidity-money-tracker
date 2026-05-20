@@ -1,5 +1,5 @@
 export function getThumbnailUrl(assetId: string): string {
-  return `${process.env.IMMICH_URL}/api/assets/${assetId}/thumbnail?size=preview`
+  return `/api/immich/${assetId}/thumbnail`
 }
 
 export async function uploadAsset(
@@ -8,7 +8,7 @@ export async function uploadAsset(
   mimeType: string
 ): Promise<string> {
   const form = new FormData()
-  form.append('assetData', new Blob([buffer], { type: mimeType }), filename)
+  form.append('assetData', new Blob([buffer as BlobPart], { type: mimeType }), filename)
   form.append('deviceAssetId', `sliptrack-${Date.now()}`)
   form.append('deviceId', 'sliptrack-web')
   form.append('fileCreatedAt', new Date().toISOString())
