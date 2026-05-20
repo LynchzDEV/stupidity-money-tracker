@@ -1,9 +1,9 @@
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { redirect, notFound } from 'next/navigation'
-import { getThumbnailUrl } from '@/lib/immich'
 import Link from 'next/link'
 import { TabBar } from '@/components/tab-bar'
+import { RecentTransactions } from '@/components/recent-transactions'
 
 const CAT_COLORS: Record<string, string> = {
   Food: '#b2492c', Transport: '#a07212', Shopping: '#3a7d52',
@@ -41,7 +41,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ book
   const maxCat = cats[0]?.[1] ?? 1
 
   const month = now.toLocaleString('en-US', { month: 'long', year: 'numeric' })
-  const recent = transactions.slice(0, 10)
+  const recent = transactions.slice(0, 10).map(t => ({ ...t, date: t.date.toISOString() }))
 
   return (
     <main className="min-h-screen scrollbar-none overflow-auto pb-28 relative" style={{ background: 'var(--bg)' }}>
@@ -131,45 +131,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ book
           <Link href={`/${bookId}/history`} className="text-[12px] font-medium" style={{ color: 'var(--accent)' }}>See all</Link>
         </div>
 
-        {recent.length === 0 ? (
-          <div className="text-center py-12 text-[14px]" style={{ color: 'var(--muted)' }}>No transactions this month</div>
-        ) : (
-          <div className="rounded-[18px] overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--hairline2)' }}>
-            {recent.map((tx, i) => {
-              const color = CAT_COLORS[tx.category] ?? 'var(--muted)'
-              return (
-                <div key={tx.id} className="flex items-center gap-3 px-3.5 py-3"
-                  style={{ borderBottom: i < recent.length - 1 ? '1px solid var(--hairline2)' : 'none' }}>
-                  {tx.immichAssetId ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={getThumbnailUrl(tx.immichAssetId)} alt="" className="w-10 h-12 rounded-[6px] object-cover flex-shrink-0"
-                      style={{ border: '1px solid var(--hairline)' }} />
-                  ) : (
-                    <div className="w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0"
-                      style={{ background: color + '14', border: `1px solid ${color}22`, color }}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M4 8h13l-3-3M20 16H7l3 3"/>
-                      </svg>
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[14.5px] font-medium text-[var(--ink)] truncate">{tx.note || tx.category}</div>
-                    <div className="text-[12px] flex items-center gap-1.5 mt-0.5" style={{ color: 'var(--muted)' }}>
-                      <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: color }} />
-                      {tx.category} · <span className="font-[family-name:var(--font-mono)]">
-                        {new Date(tx.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="font-[family-name:var(--font-mono)] text-[14.5px] font-semibold tracking-tight flex-shrink-0"
-                    style={{ color: tx.type === 'income' ? 'var(--income)' : 'var(--ink)' }}>
-                    {tx.type === 'income' ? '+' : '−'}฿{satangToTHB(tx.amount)}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
+        <RecentTransactions transactions={recent} />
       </div>
       <TabBar bookId={bookId} active="stats" />
     </main>

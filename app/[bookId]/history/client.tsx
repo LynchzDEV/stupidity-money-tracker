@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { getThumbnailUrl } from '@/lib/immich'
 import { TabBar } from '@/components/tab-bar'
+import { EditTransactionSheet } from '@/components/edit-transaction-sheet'
 
 interface Book { id: string; name: string; emoji: string }
 interface Transaction {
@@ -41,12 +42,14 @@ function dayLabel(dateStr: string) {
   return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long' })
 }
 
-export function HistoryClient({ book, transactions, query }: { book: Book; transactions: Transaction[]; query: string }) {
+export function HistoryClient({ book, transactions: initial, query }: { book: Book; transactions: Transaction[]; query: string }) {
   const router = useRouter()
   const pathname = usePathname()
   const [, startTransition] = useTransition()
   const [search, setSearch] = useState(query)
   const [activeChip, setActiveChip] = useState('All')
+  const [txs, setTxs] = useState(initial)
+  const [editing, setEditing] = useState<Transaction | null>(null)
 
   function applyFilters(q: string, chip: string) {
     const params = new URLSearchParams()
@@ -57,7 +60,17 @@ export function HistoryClient({ book, transactions, query }: { book: Book; trans
     startTransition(() => router.replace(`${pathname}?${params.toString()}`))
   }
 
-  const grouped = groupByDay(transactions)
+  function handleSaved(updated: Transaction) {
+    setTxs(prev => prev.map(t => t.id === updated.id ? updated : t))
+    setEditing(null)
+  }
+
+  function handleDeleted(id: string) {
+    setTxs(prev => prev.filter(t => t.id !== id))
+    setEditing(null)
+  }
+
+  const grouped = groupByDay(txs)
 
   return (
     <main className="min-h-screen flex flex-col relative" style={{ background: 'var(--bg)' }}>
@@ -132,8 +145,9 @@ export function HistoryClient({ book, transactions, query }: { book: Book; trans
                   const color = CAT_COLORS[tx.category] ?? 'var(--muted)'
                   const time = new Date(tx.date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
                   return (
-                    <div key={tx.id} className="flex items-center gap-3 px-3.5 py-3 active:opacity-80 transition-opacity"
-                      style={{ borderBottom: j < txs.length - 1 ? '1px solid var(--hairline2)' : 'none' }}>
+                    <div key={tx.id} className="flex items-center gap-3 px-3.5 py-3 active:opacity-80 transition-opacity cursor-pointer"
+                      style={{ borderBottom: j < txs.length - 1 ? '1px solid var(--hairline2)' : 'none' }}
+                      onClick={() => setEditing(tx)}>
                       {tx.immichAssetId ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={getThumbnailUrl(tx.immichAssetId)} alt=""
@@ -167,6 +181,14 @@ export function HistoryClient({ book, transactions, query }: { book: Book; trans
         })}
       </div>
       <TabBar bookId={book.id} active="history" />
+      {editing && (
+        <EditTransactionSheet
+          tx={editing}
+          onSave={handleSaved}
+          onDelete={handleDeleted}
+          onClose={() => setEditing(null)}
+        />
+      )}
     </main>
   )
 }
