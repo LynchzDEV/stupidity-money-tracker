@@ -1,18 +1,9 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { CategoryPicker } from '@/components/category-picker'
 
 interface Book { id: string; name: string; emoji: string }
-
-const CATEGORIES = [
-  { id: 'Food', label: 'Food & Drink', color: '#b2492c' },
-  { id: 'Transport', label: 'Transport', color: '#a07212' },
-  { id: 'Shopping', label: 'Shopping', color: '#3a7d52' },
-  { id: 'Transfer', label: 'Transfer', color: '#0e5c3a' },
-  { id: 'Bills', label: 'Bills', color: '#3548c4' },
-  { id: 'Salary', label: 'Salary', color: '#1f8a5b' },
-  { id: 'Other', label: 'Other', color: '#7a7d76' },
-]
 
 export function ManualEntryClient({ book }: { book: Book }) {
   const router = useRouter()
@@ -145,20 +136,7 @@ export function ManualEntryClient({ book }: { book: Book }) {
       {/* Category strip */}
       <div className="flex-shrink-0 px-4 pb-3">
         <div className="text-[11.5px] font-medium tracking-widest uppercase mb-2" style={{ color: 'var(--muted)' }}>Category</div>
-        <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-          {CATEGORIES.map(c => (
-            <button key={c.id} onClick={() => setCategory(c.id)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-full whitespace-nowrap active:opacity-80 transition-opacity flex-shrink-0"
-              style={{
-                background: category === c.id ? c.color + '18' : 'var(--surface)',
-                border: `1px solid ${category === c.id ? c.color + '60' : 'var(--hairline)'}`,
-                color: category === c.id ? c.color : 'var(--ink2)',
-                fontSize: 13, fontWeight: category === c.id ? 600 : 500,
-              }}>
-              {c.label}
-            </button>
-          ))}
-        </div>
+        <CategoryPicker value={category} onChange={setCategory} scrollable />
       </div>
 
       {/* Meta rows */}

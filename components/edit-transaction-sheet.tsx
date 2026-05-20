@@ -1,17 +1,11 @@
 'use client'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { CategoryPicker } from '@/components/category-picker'
 
 interface Transaction {
   id: string; amount: number; type: string; category: string
   date: string; note: string | null; immichAssetId: string | null
-}
-
-const CATEGORIES = ['Food', 'Transport', 'Shopping', 'Bills', 'Salary', 'Transfer', 'Other']
-
-const CAT_COLORS: Record<string, string> = {
-  Food: '#b2492c', Transport: '#a07212', Shopping: '#3a7d52',
-  Bills: '#3548c4', Salary: '#1f8a5b', Transfer: '#0e5c3a', Other: '#7a7d76',
 }
 
 function satangToTHB(satang: number) {
@@ -139,23 +133,7 @@ export function EditTransactionSheet({ tx, onSave, onDelete, onClose }: Props) {
             {/* Category */}
             <div>
               <div className="text-[12px] font-medium mb-1.5" style={{ color: 'var(--muted)' }}>Category</div>
-              <div className="flex flex-wrap gap-2">
-                {CATEGORIES.map(cat => {
-                  const color = CAT_COLORS[cat] ?? 'var(--muted)'
-                  const active = category === cat
-                  return (
-                    <button key={cat} onClick={() => setCategory(cat)}
-                      className="px-3 py-1.5 rounded-full text-[13px] font-medium transition-all active:scale-95"
-                      style={{
-                        background: active ? color + '18' : 'var(--surface)',
-                        border: `1.5px solid ${active ? color : 'var(--hairline)'}`,
-                        color: active ? color : 'var(--ink2)',
-                      }}>
-                      {cat}
-                    </button>
-                  )
-                })}
-              </div>
+              <CategoryPicker value={category} onChange={setCategory} />
             </div>
 
             {/* Date */}
