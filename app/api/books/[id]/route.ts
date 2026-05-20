@@ -2,12 +2,13 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  const { id } = await params
   const book = await prisma.book.findFirst({
-    where: { id: params.id, userId: session.user.id },
+    where: { id, userId: session.user.id },
   })
   if (!book) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
@@ -22,7 +23,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   }
 
   const updated = await prisma.book.update({
-    where: { id: params.id },
+    where: { id },
     data: {
       ...(body.name != null && { name: body.name }),
       ...(body.emoji != null && { emoji: body.emoji }),
@@ -32,12 +33,13 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   return NextResponse.json(updated)
 }
 
-export async function DELETE(_: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  const { id } = await params
   await prisma.book.deleteMany({
-    where: { id: params.id, userId: session.user.id },
+    where: { id, userId: session.user.id },
   })
   return new NextResponse(null, { status: 204 })
 }
