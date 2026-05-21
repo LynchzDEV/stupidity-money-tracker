@@ -314,15 +314,6 @@ export function ConfirmSheet({ extraction, previewUrl, bookName, onSave, onDisca
             className="flex-1 h-11 rounded-2xl px-3.5 text-[14px] outline-none disabled:opacity-50"
             style={{ background: 'var(--surface)', border: '1px solid var(--hairline2)', color: 'var(--ink)' }}
           />
-          <button
-            onClick={sendMessage}
-            disabled={!input.trim() || thinking}
-            className="w-11 h-11 rounded-2xl flex items-center justify-center active:scale-95 transition-transform disabled:opacity-40"
-            style={{ background: 'var(--accent)' }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 19V5M5 12l7-7 7 7"/>
-            </svg>
-          </button>
         </div>
 
         {/* Save row — edit icon + save button (matches design) */}
@@ -335,16 +326,29 @@ export function ConfirmSheet({ extraction, previewUrl, bookName, onSave, onDisca
               <path d="M4 20h4l10-10-4-4L4 16v4z"/><path d="M14 6l4 4"/>
             </svg>
           </button>
-          <button
-            disabled={!typeAnswered || !amount}
-            onClick={() => onSave({ amount, type, category, date, note, merchantName: extraction.merchantName })}
-            className="flex-1 h-[52px] rounded-2xl text-white text-base font-semibold flex items-center justify-center gap-2 active:scale-[.97] transition-transform disabled:opacity-40"
-            style={{ background: 'var(--accent)', boxShadow: '0 1px 0 rgba(255,255,255,.18) inset, 0 -1px 0 rgba(0,0,0,.15) inset, 0 2px 6px rgba(14,92,58,.25)' }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 12.5l5 5L20 6.5"/>
-            </svg>
-            {typeAnswered && amount ? `Save · ${amtFormatted}` : 'Pick one to save'}
-          </button>
+          {input.trim() ? (
+            <button
+              onClick={sendMessage}
+              disabled={thinking}
+              className="flex-1 h-[52px] rounded-2xl text-white text-base font-semibold flex items-center justify-center gap-2 active:scale-[.97] transition-transform disabled:opacity-40"
+              style={{ background: 'var(--accent)', boxShadow: '0 1px 0 rgba(255,255,255,.18) inset, 0 -1px 0 rgba(0,0,0,.15) inset, 0 2px 6px rgba(14,92,58,.25)' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 19V5M5 12l7-7 7 7"/>
+              </svg>
+              Send
+            </button>
+          ) : (
+            <button
+              disabled={!typeAnswered || !amount}
+              onClick={() => onSave({ amount, type, category, date, note, merchantName: extraction.merchantName })}
+              className="flex-1 h-[52px] rounded-2xl text-white text-base font-semibold flex items-center justify-center gap-2 active:scale-[.97] transition-transform disabled:opacity-40"
+              style={{ background: 'var(--accent)', boxShadow: '0 1px 0 rgba(255,255,255,.18) inset, 0 -1px 0 rgba(0,0,0,.15) inset, 0 2px 6px rgba(14,92,58,.25)' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 12.5l5 5L20 6.5"/>
+              </svg>
+              {typeAnswered && amount ? `Save · ${amtFormatted}` : 'Pick one to save'}
+            </button>
+          )}
         </div>
       </div>
     </motion.div>
