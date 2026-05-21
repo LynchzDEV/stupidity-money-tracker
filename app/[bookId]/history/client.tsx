@@ -140,7 +140,7 @@ export function HistoryClient({ book, transactions: initial, query }: { book: Bo
               <div className="flex justify-between items-baseline py-2 px-1">
                 <div className="text-[12px] font-medium tracking-wide" style={{ color: 'var(--muted)' }}>{dayLabel(day)}</div>
                 <div className="font-[family-name:var(--font-mono)] text-[12px] font-semibold tracking-tight"
-                  style={{ color: dayNet >= 0 ? 'var(--income)' : 'var(--ink2)' }}>
+                  style={{ color: dayNet >= 0 ? 'var(--income)' : 'var(--expense)' }}>
                   {dayNet >= 0 ? '+' : '−'}฿{satangToTHB(Math.abs(dayNet))}
                 </div>
               </div>
