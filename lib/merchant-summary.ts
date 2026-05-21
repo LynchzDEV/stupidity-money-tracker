@@ -1,22 +1,38 @@
 import { prisma } from './prisma'
 
 export async function buildMerchantSummary(bookId: string): Promise<string> {
-  const rows = await prisma.transaction.groupBy({
-    by: ['note', 'category'],
-    where: { bookId, note: { not: null } },
-    _count: { note: true },
-    orderBy: { _count: { note: 'desc' } },
-    take: 200,
-  })
-
-  if (rows.length === 0) return ''
+  const [namedRows, legacyRows] = await Promise.all([
+    prisma.transaction.groupBy({
+      by: ['merchantName', 'category'],
+      where: { bookId, merchantName: { not: null } },
+      _count: { merchantName: true },
+      orderBy: { _count: { merchantName: 'desc' } },
+      take: 200,
+    }),
+    prisma.transaction.groupBy({
+      by: ['note', 'category'],
+      where: { bookId, merchantName: null, note: { not: null } },
+      _count: { note: true },
+      orderBy: { _count: { note: 'desc' } },
+      take: 200,
+    }),
+  ])
 
   const map = new Map<string, Map<string, number>>()
-  for (const row of rows) {
+
+  for (const row of namedRows) {
+    if (!row.merchantName) continue
+    if (!map.has(row.merchantName)) map.set(row.merchantName, new Map())
+    map.get(row.merchantName)!.set(row.category, row._count.merchantName)
+  }
+
+  for (const row of legacyRows) {
     if (!row.note) continue
     if (!map.has(row.note)) map.set(row.note, new Map())
     map.get(row.note)!.set(row.category, row._count.note)
   }
+
+  if (map.size === 0) return ''
 
   const lines = [...map.entries()]
     .map(([merchant, cats]) => ({
