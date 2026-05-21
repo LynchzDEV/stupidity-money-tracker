@@ -40,7 +40,7 @@ function dayLabel(dateStr: string) {
   return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long' })
 }
 
-export function HistoryClient({ book, transactions: initial, query }: { book: Book; transactions: Transaction[]; query: string }) {
+export function HistoryClient({ book, transactions: initial, allCategories, query }: { book: Book; transactions: Transaction[]; allCategories: string[]; query: string }) {
   const router = useRouter()
   const pathname = usePathname()
   const [, startTransition] = useTransition()
@@ -51,8 +51,6 @@ export function HistoryClient({ book, transactions: initial, query }: { book: Bo
   const [editing, setEditing] = useState<Transaction | null>(null)
 
   useEffect(() => { setTxs(initial) }, [initial])
-
-  const categories = [...new Set(initial.map(t => t.category))].sort()
 
   function applyFilters(q: string, type: 'all' | 'income' | 'expense', cat: string | null) {
     const params = new URLSearchParams()
@@ -121,25 +119,42 @@ export function HistoryClient({ book, transactions: initial, query }: { book: Bo
 
         {/* Type row */}
         <div className="flex gap-1.5 mb-2">
-          {TYPE_TABS.map(({ label, value }) => (
-            <button key={value}
-              onClick={() => { setActiveType(value); applyFilters(search, value, activeCategory) }}
-              className="flex-1 py-1.5 rounded-full text-[12.5px] font-medium whitespace-nowrap active:opacity-80 transition-opacity"
-              style={{
-                background: activeType === value ? 'var(--ink)' : 'transparent',
-                color: activeType === value ? '#fff' : 'var(--ink2)',
-                border: `1px solid ${activeType === value ? 'var(--ink)' : 'var(--hairline)'}`,
-              }}>
-              {label}
-            </button>
-          ))}
+          <button
+            onClick={() => { setActiveType('all'); applyFilters(search, 'all', activeCategory) }}
+            className="px-3 py-1.5 rounded-full text-[12.5px] font-medium whitespace-nowrap active:opacity-80 transition-opacity flex-shrink-0"
+            style={{
+              background: activeType === 'all' ? 'var(--ink)' : 'transparent',
+              color: activeType === 'all' ? '#fff' : 'var(--ink2)',
+              border: `1px solid ${activeType === 'all' ? 'var(--ink)' : 'var(--hairline)'}`,
+            }}>
+            All
+          </button>
+          <button
+            onClick={() => { setActiveType('income'); applyFilters(search, 'income', activeCategory) }}
+            className="flex-1 py-1.5 rounded-full text-[13px] font-semibold whitespace-nowrap active:opacity-80 transition-opacity"
+            style={{
+              background: activeType === 'income' ? 'var(--income)' : 'transparent',
+              color: activeType === 'income' ? '#fff' : 'var(--ink2)',
+              border: `1px solid ${activeType === 'income' ? 'var(--income)' : 'var(--hairline)'}`,
+            }}>
+            Income
+          </button>
+          <button
+            onClick={() => { setActiveType('expense'); applyFilters(search, 'expense', activeCategory) }}
+            className="flex-1 py-1.5 rounded-full text-[13px] font-semibold whitespace-nowrap active:opacity-80 transition-opacity"
+            style={{
+              background: activeType === 'expense' ? 'var(--expense)' : 'transparent',
+              color: activeType === 'expense' ? '#fff' : 'var(--ink2)',
+              border: `1px solid ${activeType === 'expense' ? 'var(--expense)' : 'var(--hairline)'}`,
+            }}>
+            Expense
+          </button>
         </div>
 
-        {/* Category row */}
-        {categories.length > 0 && (
+        {/* Category row — always all categories */}
+        {allCategories.length > 0 && (
           <div className="flex gap-1.5 overflow-x-auto scrollbar-none pb-1">
-            {categories.map((cat) => {
-              const c = CAT_COLORS[cat] ?? '#7a7d76'
+            {allCategories.map((cat) => {
               const active = activeCategory === cat
               return (
                 <button key={cat}
@@ -150,9 +165,9 @@ export function HistoryClient({ book, transactions: initial, query }: { book: Bo
                   }}
                   className="px-2.5 py-1.5 rounded-full text-[12.5px] font-medium whitespace-nowrap active:opacity-80 transition-opacity flex-shrink-0"
                   style={{
-                    background: active ? c + '18' : 'transparent',
-                    color: active ? c : 'var(--ink2)',
-                    border: `1px solid ${active ? c : 'var(--hairline)'}`,
+                    background: active ? 'var(--ink)' : 'transparent',
+                    color: active ? '#fff' : 'var(--ink2)',
+                    border: `1px solid ${active ? 'var(--ink)' : 'var(--hairline)'}`,
                   }}>
                   {cat}
                 </button>

@@ -25,16 +25,16 @@ export default async function HistoryPage({
   if (sp.type) where.type = sp.type
   if (sp.q) where.note = { contains: sp.q, mode: 'insensitive' }
 
-  const transactions = await prisma.transaction.findMany({
-    where,
-    orderBy: { date: 'desc' },
-    take: 100,
-  })
+  const [transactions, allCats] = await Promise.all([
+    prisma.transaction.findMany({ where, orderBy: { date: 'desc' }, take: 100 }),
+    prisma.transaction.findMany({ where: { bookId }, select: { category: true }, distinct: ['category'] }),
+  ])
 
   return (
     <HistoryClient
       book={book}
       transactions={transactions.map(t => ({ ...t, date: t.date.toISOString() }))}
+      allCategories={allCats.map(t => t.category).sort()}
       query={sp.q ?? ''}
     />
   )
