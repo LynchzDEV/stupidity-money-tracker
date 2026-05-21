@@ -111,7 +111,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ book
               <div key={cat}>
                 <div className="flex justify-between items-center mb-1">
                   <span className="text-[13.5px] font-medium text-[var(--ink)]">{cat}</span>
-                  <span className="font-[family-name:var(--font-mono)] text-[13.5px] font-medium" style={{ color: 'var(--ink2)' }}>
+                  <span className="font-[family-name:var(--font-mono)] text-[13.5px] font-medium" style={{ color: 'var(--expense)' }}>
                     ฿{satangToTHB(total)}
                   </span>
                 </div>
