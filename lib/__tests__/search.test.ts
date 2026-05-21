@@ -64,8 +64,8 @@ describe('paramsToFilters', () => {
   it('decodes satang params back to filters', () => {
     const sp = new URLSearchParams('aiMin=5000&aiMax=10000&aiMode=1')
     const f = paramsToFilters(sp)
-    expect(f.amountMin).toBe(5000)
-    expect(f.amountMax).toBe(10000)
+    expect(f?.amountMin).toBe(5000)
+    expect(f?.amountMax).toBe(10000)
   })
   it('returns null when aiMode not set', () => {
     expect(paramsToFilters(new URLSearchParams('q=food'))).toBeNull()
