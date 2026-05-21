@@ -115,7 +115,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "collect": { "url": ["http://localhost:3000/login"], "numberOfRuns": 3 },
     "assert": {
       "assertions": {
-        "categories:performance": ["warn", { "minScore": 0.85 }],
+        "categories:performance": ["error", { "minScore": 0.90 }],
         "categories:accessibility": ["error", { "minScore": 0.90 }],
         "categories:best-practices": ["warn", { "minScore": 0.90 }],
         "categories:seo": ["error", { "minScore": 0.90 }]
@@ -126,7 +126,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 }
 ```
 
-Performance: warn at 85 (don't fail CI hard — auth redirects make full scores unreliable). Accessibility + SEO: error at 90 (these are deterministic).
+All categories error at 90 — hard fail on PR if any score drops below.
 
 ---
 
