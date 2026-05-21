@@ -4,7 +4,12 @@ import Credentials from 'next-auth/providers/credentials'
 import { PrismaAdapter } from '@auth/prisma-adapter'
 import { prisma } from './prisma'
 
+const trustHost =
+  process.env.AUTH_TRUST_HOST === 'true' ||
+  process.env.NODE_ENV === 'production'
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  trustHost,
   adapter: PrismaAdapter(prisma),
   session: { strategy: 'jwt' },
   providers: [

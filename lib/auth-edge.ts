@@ -3,7 +3,12 @@ import Google from 'next-auth/providers/google'
 
 // Edge-compatible auth config — no Prisma adapter.
 // Used only in proxy.ts to verify JWT session cookies.
+const trustHost =
+  process.env.AUTH_TRUST_HOST === 'true' ||
+  process.env.NODE_ENV === 'production'
+
 export const { auth } = NextAuth({
+  trustHost,
   session: { strategy: 'jwt' },
   providers: [
     Google({
