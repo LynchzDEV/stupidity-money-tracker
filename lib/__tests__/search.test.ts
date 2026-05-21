@@ -17,6 +17,9 @@ describe('isNaturalLanguage', () => {
   it('returns true for range expression', () => {
     expect(isNaturalLanguage('around 50-100 baht')).toBe(true)
   })
+  it('returns true for bare numeric range', () => {
+    expect(isNaturalLanguage('50-100')).toBe(true)
+  })
   it('returns true for place description', () => {
     expect(isNaturalLanguage('food court last week')).toBe(true)
   })
