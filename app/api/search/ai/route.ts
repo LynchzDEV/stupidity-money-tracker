@@ -21,8 +21,15 @@ export async function POST(req: Request) {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const raw = await req.json()
-  const query = typeof raw?.query === 'string' ? raw.query.trim() : ''
+  let raw: unknown
+  try {
+    raw = await req.json()
+  } catch {
+    return NextResponse.json({})
+  }
+  const query = typeof (raw as { query?: unknown })?.query === 'string'
+    ? ((raw as { query: string }).query).trim()
+    : ''
   if (!query || query.length > 500) return NextResponse.json({})
 
   const today = new Date().toISOString().split('T')[0]
@@ -67,8 +74,8 @@ export async function POST(req: Request) {
     if (['Food','Transport','Shopping','Bills','Salary','Transfer','Other'].includes(parsed.category)) filters.category = parsed.category
     if (parsed.type === 'income' || parsed.type === 'expense') filters.type = parsed.type
     if (typeof parsed.keyword === 'string' && parsed.keyword) filters.keyword = parsed.keyword
-    if (typeof parsed.dateFrom === 'string') filters.dateFrom = parsed.dateFrom
-    if (typeof parsed.dateTo === 'string') filters.dateTo = parsed.dateTo
+    if (typeof parsed.dateFrom === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(parsed.dateFrom)) filters.dateFrom = parsed.dateFrom
+    if (typeof parsed.dateTo === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(parsed.dateTo)) filters.dateTo = parsed.dateTo
     return NextResponse.json(filters)
   } catch {
     return NextResponse.json({})
