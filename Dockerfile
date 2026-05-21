@@ -32,8 +32,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
-# Prisma schema + migrations
+# Prisma schema + migrations + v7 config
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+COPY --from=builder --chown=nextjs:nodejs /app/prisma.config.ts ./prisma.config.ts
 
 # All prod node_modules (includes prisma CLI + full transitive dep tree)
 COPY --from=prod-deps --chown=nextjs:nodejs /app/node_modules ./node_modules
