@@ -39,6 +39,7 @@ model Transaction {
   category       String   // "Food" | "Transport" | "Bills" | "Shopping" | "Transfer" | "Salary" | "Other"
   date           DateTime
   note           String?
+  merchantName   String?
   immichAssetId  String?
   confidenceJson Json?
   bookId         String
