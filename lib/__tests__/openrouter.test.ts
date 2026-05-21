@@ -53,4 +53,43 @@ describe('extractFromImage', () => {
     mockFetch.mockResolvedValueOnce({ ok: false, status: 429 })
     await expect(extractFromImage('base64data')).rejects.toThrow('OpenRouter error: 429')
   })
+
+  it('injects merchant context into system prompt when provided', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        choices: [{ message: { content: JSON.stringify({
+          amount: 150, type: 'expense', category: 'Food',
+          date: '2026-05-21', note: 'LINE MAN',
+          confidence: { amount: 0.95, type: 0.9, category: 0.92, date: 0.9 },
+        }) } }],
+      }),
+    })
+
+    await extractFromImage('base64data', 'receipt', '2026-05-21', 'LINE MAN: Food×15, Transport×4')
+
+    const body = JSON.parse(mockFetch.mock.calls[0][1].body)
+    const systemContent: string = body.messages[0].content
+    expect(systemContent).toContain('LINE MAN: Food×15, Transport×4')
+    expect(systemContent).toContain('Merchant history from this book')
+  })
+
+  it('does not inject merchant section when context is empty string', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        choices: [{ message: { content: JSON.stringify({
+          amount: 50, type: 'expense', category: 'Other',
+          date: '2026-05-21', note: 'Unknown',
+          confidence: { amount: 0.9, type: 0.8, category: 0.5, date: 0.9 },
+        }) } }],
+      }),
+    })
+
+    await extractFromImage('base64data', 'receipt', '2026-05-21', '')
+
+    const body = JSON.parse(mockFetch.mock.calls[0][1].body)
+    const systemContent: string = body.messages[0].content
+    expect(systemContent).not.toContain('Merchant history from this book')
+  })
 })

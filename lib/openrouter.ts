@@ -51,8 +51,16 @@ Rules:
 - amount is ALWAYS in THB as a plain decimal number (e.g. 500.00 not "500 บาท")
 `
 
-export async function extractFromImage(base64Image: string, mode: 'receipt' | 'bank_slip' = 'receipt', today = new Date().toISOString().split('T')[0]): Promise<ExtractionResult> {
-  const systemPrompt = SYSTEM_PROMPT_BASE + `\nToday's date (CE): ${today}\n`
+export async function extractFromImage(
+  base64Image: string,
+  mode: 'receipt' | 'bank_slip' = 'receipt',
+  today = new Date().toISOString().split('T')[0],
+  merchantContext?: string,
+): Promise<ExtractionResult> {
+  let systemPrompt = SYSTEM_PROMPT_BASE + `\nToday's date (CE): ${today}\n`
+  if (merchantContext) {
+    systemPrompt += `\nMerchant history from this book (use to pick the most frequent category when the merchant name matches):\n${merchantContext}\n`
+  }
   const userText = mode === 'bank_slip'
     ? 'Extract transaction data from this bank transfer slip (KBank/SCB/KTB/BBL e-slip). Focus on amount and date; type/category may be ambiguous.'
     : 'Extract transaction data from this receipt.'
@@ -81,8 +89,6 @@ export async function extractFromImage(base64Image: string, mode: 'receipt' | 'b
 
   const data = await res.json()
   const content: string = data.choices[0].message.content
-
-  // Strip markdown code fences if present
   const cleaned = content.replace(/^```(?:json)?\n?/i, '').replace(/\n?```$/i, '').trim()
   return JSON.parse(cleaned) as ExtractionResult
 }
