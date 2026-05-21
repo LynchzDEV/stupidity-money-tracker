@@ -1,36 +1,123 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SlipTrack
 
-## Getting Started
+Mobile-first AI income & expense tracker. Point your camera at a receipt or bank slip — it extracts the amount, category, date, and note automatically. Add transactions manually too.
 
-First, run the development server:
+<!-- screenshot: upload screen with camera active -->
+<!-- screenshot: dashboard with monthly summary -->
+<!-- screenshot: history list -->
+
+## Features
+
+- **AI scan** — photograph receipts or bank slips; Gemini extracts structured data
+- **Manual entry** — fallback form with category picker and date/note fields
+- **Multiple books** — separate ledgers (e.g. Personal, Business)
+- **Dashboard** — monthly income/expense summary with category breakdown chart
+- **History** — searchable, filterable transaction list grouped by day
+- **Custom categories** — add your own; autocomplete on reuse
+- **Auth** — Google OAuth or dev bypass
+
+## Tech Stack
+
+| Layer | Choice |
+|---|---|
+| Framework | Next.js 16 (App Router) |
+| Database | PostgreSQL 16 via Prisma 7 |
+| Auth | NextAuth v5 (Google + Credentials) |
+| AI | OpenRouter → Gemini 2.0 Flash (vision) |
+| Photo storage | Immich (optional) |
+| Styling | Tailwind CSS + CSS variables |
+| Runtime | Bun |
+
+## Prerequisites
+
+- [Bun](https://bun.sh)
+- Docker (for Postgres)
+- OpenRouter API key
+- Google OAuth credentials (optional — dev bypass available)
+
+## Setup
+
+**1. Clone & install**
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
+git clone <repo>
+cd income-and-expenses-ai-trackker
+bun install
+```
+
+**2. Start database**
+
+```bash
+docker compose up -d
+```
+
+**3. Environment variables**
+
+```bash
+cp .env.example .env.local
+```
+
+```env
+DATABASE_URL=postgresql://sliptrack:sliptrack@localhost:5433/sliptrack
+
+AUTH_SECRET=your-secret-here
+AUTH_GOOGLE_ID=...
+AUTH_GOOGLE_SECRET=...
+
+OPENROUTER_API_KEY=sk-or-...
+OPENROUTER_MODEL=google/gemini-2.0-flash-001   # optional, this is the default
+
+# Optional — Immich photo backup
+IMMICH_URL=https://your-immich-instance
+IMMICH_API_KEY=...
+```
+
+**4. Migrate & generate**
+
+```bash
+npx prisma migrate dev
+npx prisma generate
+```
+
+**5. Run**
+
+```bash
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## How it works
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. **Upload page** — live camera feed (or gallery picker). Tap the shutter.
+2. AI classifies the image. Non-receipt/slip images are rejected with an explanation.
+3. Extracted fields shown in a confirm sheet — edit before saving.
+4. Transaction saved to Postgres; photo optionally backed up to Immich.
 
-## Learn More
+## Project structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+app/
+  (auth)/login/        — login page
+  [bookId]/
+    dashboard/         — monthly summary + category chart
+    upload/            — camera + AI extraction
+    manual/            — manual entry form
+    history/           — searchable transaction list
+  books/               — book switcher
+components/            — UI components
+lib/                   — auth, prisma, openrouter, immich
+prisma/                — schema + migrations
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Development
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+bun test          # unit tests (Vitest)
+bun run lint      # ESLint
+bun run build     # production build
+```
 
-## Deploy on Vercel
+## License
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
