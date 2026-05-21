@@ -18,6 +18,7 @@ describe('extractFromImage', () => {
       category: 'Food',
       date: '2026-05-20',
       note: '7-Eleven Sukhumvit 31',
+      merchantName: '7-Eleven',
       confidence: { amount: 0.98, type: 0.85, category: 0.90, date: 0.95 },
     }
     mockFetch.mockResolvedValueOnce({
@@ -72,6 +73,24 @@ describe('extractFromImage', () => {
     const systemContent: string = body.messages[0].content
     expect(systemContent).toContain('LINE MAN: Food×15, Transport×4')
     expect(systemContent).toContain('Merchant history from this book')
+  })
+
+  it('passes through merchantName when present in AI response', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        choices: [{ message: { content: JSON.stringify({
+          amount: 89, type: 'expense', category: 'Food',
+          date: '2026-05-21', note: 'LINE MAN Siam Paragon 3F',
+          merchantName: 'LINE MAN',
+          confidence: { amount: 0.95, type: 0.9, category: 0.9, date: 0.9 },
+        }) } }],
+      }),
+    })
+
+    const result = await extractFromImage('base64data')
+    expect(result.merchantName).toBe('LINE MAN')
+    expect(result.note).toBe('LINE MAN Siam Paragon 3F')
   })
 
   it('does not inject merchant section when context is empty string', async () => {

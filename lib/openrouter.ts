@@ -4,6 +4,7 @@ export interface ExtractionResult {
   category?: string
   date?: string           // ISO date string YYYY-MM-DD
   note?: string
+  merchantName?: string
   rejected?: boolean
   rejectReason?: string
   confidence: {
@@ -29,6 +30,7 @@ JSON shape for valid documents:
   "category": <one of: "Food", "Transport", "Bills", "Shopping", "Transfer", "Salary", "Other">,
   "date": <ISO date string YYYY-MM-DD — always include if any date is visible on the document>,
   "note": <short description, merchant name or transfer counterpart>,
+  "merchantName": <the core merchant/brand name only, normalised — e.g. "LINE MAN", "Grab Food", "7-Eleven", "KBank". Omit branch, location, order numbers. For bank transfers use the bank name. Omit if not determinable>,
   "confidence": {
     "amount": <0.0-1.0>,
     "type": <0.0-1.0>,
