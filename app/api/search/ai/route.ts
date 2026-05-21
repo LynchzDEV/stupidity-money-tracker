@@ -21,11 +21,17 @@ export async function POST(req: Request) {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { query } = await req.json() as { query: string }
-  if (!query?.trim()) return NextResponse.json({})
+  const raw = await req.json()
+  const query = typeof raw?.query === 'string' ? raw.query.trim() : ''
+  if (!query || query.length > 500) return NextResponse.json({})
 
   const today = new Date().toISOString().split('T')[0]
   const systemPrompt = SYSTEM_PROMPT.replace('{TODAY}', today)
+
+  if (!process.env.OPENROUTER_API_KEY) {
+    console.error('[ai-search] OPENROUTER_API_KEY not set')
+    return NextResponse.json({})
+  }
 
   const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
@@ -43,14 +49,26 @@ export async function POST(req: Request) {
     signal: AbortSignal.timeout(5000),
   })
 
-  if (!res.ok) return NextResponse.json({}, { status: 200 })
+  if (!res.ok) {
+    console.error('[ai-search] OpenRouter error', res.status)
+    return NextResponse.json({})
+  }
 
   const data = await res.json()
-  const content: string = data.choices[0].message.content
+  const content: string = data.choices?.[0]?.message?.content ?? ''
+  if (!content) return NextResponse.json({})
   const cleaned = content.replace(/^```(?:json)?\n?/i, '').replace(/\n?```$/i, '').trim()
 
   try {
-    const filters = JSON.parse(cleaned) as AiSearchFilters
+    const parsed = JSON.parse(cleaned)
+    const filters: AiSearchFilters = {}
+    if (typeof parsed.amountMin === 'number') filters.amountMin = parsed.amountMin
+    if (typeof parsed.amountMax === 'number') filters.amountMax = parsed.amountMax
+    if (['Food','Transport','Shopping','Bills','Salary','Transfer','Other'].includes(parsed.category)) filters.category = parsed.category
+    if (parsed.type === 'income' || parsed.type === 'expense') filters.type = parsed.type
+    if (typeof parsed.keyword === 'string' && parsed.keyword) filters.keyword = parsed.keyword
+    if (typeof parsed.dateFrom === 'string') filters.dateFrom = parsed.dateFrom
+    if (typeof parsed.dateTo === 'string') filters.dateTo = parsed.dateTo
     return NextResponse.json(filters)
   } catch {
     return NextResponse.json({})
