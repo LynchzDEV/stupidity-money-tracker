@@ -43,7 +43,7 @@ function dayLabel(dateStr: string) {
   return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long' })
 }
 
-export function HistoryClient({ book, transactions: initial, allCategories, query }: { book: Book; transactions: Transaction[]; allCategories: string[]; query: string }) {
+export function HistoryClient({ book, transactions: initial, allCategories, query, initialAiMode }: { book: Book; transactions: Transaction[]; allCategories: string[]; query: string; initialAiMode: boolean }) {
   const router = useRouter()
   const pathname = usePathname()
   const [, startTransition] = useTransition()
@@ -53,16 +53,20 @@ export function HistoryClient({ book, transactions: initial, allCategories, quer
   const [txs, setTxs] = useState(initial)
   const [editing, setEditing] = useState<Transaction | null>(null)
   const [aiLoading, setAiLoading] = useState(false)
-  const [aiMode, setAiMode] = useState(false)
+  const [aiMode, setAiMode] = useState(initialAiMode)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => { setTxs(initial) }, [initial])
 
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [])
+
   function applyFilters(q: string, type: 'all' | 'income' | 'expense', cat: string | null, extraParams?: URLSearchParams) {
     const params = extraParams ? new URLSearchParams(extraParams) : new URLSearchParams()
-    if (!extraParams) {
-      if (q) params.set('q', q)
-    }
+    if (q) params.set('q', q)
     if (type === 'expense') params.set('type', 'expense')
     else if (type === 'income') params.set('type', 'income')
     if (cat) params.set('category', cat)

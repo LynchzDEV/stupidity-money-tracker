@@ -40,10 +40,10 @@ export default async function HistoryPage({
   ))
 
   if (aiFilters) {
-    if (sp.category) where.category = sp.category
-    if (sp.type) where.type = sp.type
     if (aiFilters.category) where.category = aiFilters.category
+    else if (sp.category) where.category = sp.category
     if (aiFilters.type) where.type = aiFilters.type
+    else if (sp.type) where.type = sp.type
     if (aiFilters.keyword) where.note = { contains: aiFilters.keyword, mode: 'insensitive' }
     if (aiFilters.amountMin != null || aiFilters.amountMax != null) {
       where.amount = {
@@ -74,6 +74,7 @@ export default async function HistoryPage({
       transactions={transactions.map(t => ({ ...t, date: t.date.toISOString() }))}
       allCategories={allCats.map(t => t.category).sort()}
       query={sp.q ?? ''}
+      initialAiMode={!!sp.aiMode}
     />
   )
 }
