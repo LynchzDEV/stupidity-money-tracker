@@ -32,15 +32,19 @@ jobs:
           NEXTAUTH_URL: http://localhost:3000
 
       - name: Start server
-        run: node .next/standalone/server.js &
+        run: node .next/standalone/server.js > /tmp/server.log 2>&1 &
         env:
           DATABASE_URL: postgresql://sliptrack:sliptrack@localhost:5432/sliptrack
           NEXTAUTH_SECRET: ci-secret-not-real
+          AUTH_SECRET: ci-secret-not-real
           NEXTAUTH_URL: http://localhost:3000
+          AUTH_URL: http://localhost:3000
           NEXT_TELEMETRY_DISABLED: 1
+          PORT: 3000
+          HOSTNAME: 0.0.0.0
 
       - name: Wait for server
-        run: npx wait-on http://localhost:3000/login --timeout 30000
+        run: npx wait-on http://localhost:3000 --timeout 30000 || (cat /tmp/server.log && exit 1)
 
       - name: Run Lighthouse CI
         run: npx @lhci/cli@0.14 autorun
