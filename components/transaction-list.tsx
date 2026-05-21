@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import Image from 'next/image'
 import { formatTHB } from '@/lib/utils'
 import { getThumbnailUrl } from '@/lib/immich'
 import { format } from 'date-fns'
@@ -40,11 +41,12 @@ export function TransactionList({ transactions }: TransactionListProps) {
         >
           <div className="flex items-center gap-3 p-3.5">
             {tx.immichAssetId ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <Image
                 src={getThumbnailUrl(tx.immichAssetId)}
                 alt="Receipt"
-                className="w-10 h-10 rounded-lg object-cover flex-shrink-0 bg-[var(--bg)]"
+                width={40}
+                height={40}
+                className="rounded-lg object-cover flex-shrink-0 bg-[var(--bg)]"
               />
             ) : (
               <div className="w-10 h-10 rounded-lg bg-[var(--bg)] flex items-center justify-center text-lg flex-shrink-0">
@@ -73,11 +75,14 @@ export function TransactionList({ transactions }: TransactionListProps) {
 
           {expanded === tx.id && tx.immichAssetId && (
             <div className="px-3.5 pb-3.5">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src={getThumbnailUrl(tx.immichAssetId)}
                 alt="Receipt full"
-                className="w-full rounded-xl object-contain max-h-64 bg-[var(--bg)]"
+                width={0}
+                height={0}
+                sizes="100vw"
+                className="rounded-xl object-contain bg-[var(--bg)]"
+                style={{ width: '100%', height: 'auto', maxHeight: 256 }}
               />
             </div>
           )}

@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import Image from 'next/image'
 import { getThumbnailUrl } from '@/lib/immich'
 import { EditTransactionSheet } from '@/components/edit-transaction-sheet'
 
@@ -46,9 +47,14 @@ export function RecentTransactions({ transactions: initial }: { transactions: Tr
               style={{ borderBottom: i < txs.length - 1 ? '1px solid var(--hairline2)' : 'none' }}
               onClick={() => setEditing(tx)}>
               {tx.immichAssetId ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={getThumbnailUrl(tx.immichAssetId)} alt="" className="w-10 h-12 rounded-[6px] object-cover flex-shrink-0"
-                  style={{ border: '1px solid var(--hairline)' }} />
+                <Image
+                  src={getThumbnailUrl(tx.immichAssetId)}
+                  alt=""
+                  width={40}
+                  height={48}
+                  className="rounded-[6px] object-cover flex-shrink-0"
+                  style={{ border: '1px solid var(--hairline)' }}
+                />
               ) : (
                 <div className="w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0"
                   style={{ background: color + '14', border: `1px solid ${color}22`, color }}>
