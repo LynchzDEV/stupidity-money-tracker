@@ -1,4 +1,15 @@
+import type { Metadata } from 'next'
 import { signIn } from '@/lib/auth'
+
+export const metadata: Metadata = {
+  title: 'Sign in',
+  description: 'Sign in to SlipTrack to track your receipts and expenses.',
+  robots: { index: true, follow: false },
+  openGraph: {
+    title: 'Sign in to SlipTrack',
+    description: 'Snap a receipt. Done.',
+  },
+}
 
 export default function LoginPage() {
   return (
