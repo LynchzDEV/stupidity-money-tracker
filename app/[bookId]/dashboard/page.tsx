@@ -40,6 +40,10 @@ export default async function DashboardPage({ params }: { params: Promise<{ book
   const cats = [...catMap.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5)
   const maxCat = cats[0]?.[1] ?? 1
 
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+  const remainingDays = daysInMonth - now.getDate()
+  const perDaySatang = remainingDays > 0 && netSatang > 0 ? Math.floor(netSatang / remainingDays) : null
+
   const month = now.toLocaleString('en-US', { month: 'long', year: 'numeric' })
   const recent = transactions.slice(0, 10).map(t => ({ ...t, date: t.date.toISOString() }))
 
@@ -96,6 +100,22 @@ export default async function DashboardPage({ params }: { params: Promise<{ book
               </div>
             </div>
           </div>
+          {perDaySatang !== null && (
+            <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--hairline2)' }}>
+              <div className="flex items-baseline justify-between">
+                <span className="text-[11.5px] font-medium tracking-widest uppercase" style={{ color: 'var(--muted)' }}>
+                  Est. per day left
+                </span>
+                <span className="text-[12px]" style={{ color: 'var(--muted)' }}>
+                  {remainingDays} days remaining
+                </span>
+              </div>
+              <div className="font-[family-name:var(--font-mono)] text-[28px] font-semibold tracking-tight leading-none mt-1" style={{ color: 'var(--ink)' }}>
+                ฿{satangToTHB(perDaySatang)}
+                <span className="text-[14px] font-normal ml-1" style={{ color: 'var(--muted)' }}>/day</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
