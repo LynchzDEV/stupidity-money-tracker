@@ -1,10 +1,16 @@
-# Stage 1: install all dependencies (dev + prod, needed for build)
+# Stage 1: all deps (dev + prod) for build
 FROM node:22-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
-# Stage 2: build Next.js standalone output
+# Stage 2: prod-only deps — no cherry-picking, no whack-a-mole
+FROM node:22-alpine AS prod-deps
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
+
+# Stage 3: build Next.js standalone output
 FROM node:22-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
@@ -12,7 +18,7 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npx prisma generate && npm run build
 
-# Stage 3: minimal production runner
+# Stage 4: minimal production runner
 FROM node:22-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
@@ -26,13 +32,13 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
-# Prisma schema + migrations for `prisma migrate deploy` at startup
+# Prisma schema + migrations
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
-# Prisma CLI (no engine binary needed with adapter-pg — pure JS client)
-COPY --from=deps --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
+
+# All prod node_modules (includes prisma CLI + full transitive dep tree)
+COPY --from=prod-deps --chown=nextjs:nodejs /app/node_modules ./node_modules
+# Generated Prisma client from builder
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=deps --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=deps --chown=nextjs:nodejs /app/node_modules/effect ./node_modules/effect
 
 USER nextjs
 EXPOSE 3000
