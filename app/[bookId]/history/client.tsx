@@ -73,12 +73,6 @@ export function HistoryClient({ book, transactions: initial, allCategories, quer
     router.refresh()
   }
 
-  const TYPE_TABS: { label: string; value: 'all' | 'income' | 'expense' }[] = [
-    { label: 'All', value: 'all' },
-    { label: 'Income', value: 'income' },
-    { label: 'Expense', value: 'expense' },
-  ]
-
   const grouped = groupByDay(txs)
 
   return (
