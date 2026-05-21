@@ -74,7 +74,7 @@ className="rounded-[6px] object-cover flex-shrink-0"
                 </div>
               </div>
               <div className="font-[family-name:var(--font-mono)] text-[14.5px] font-semibold tracking-tight flex-shrink-0"
-                style={{ color: tx.type === 'income' ? 'var(--income)' : 'var(--ink)' }}>
+                style={{ color: tx.type === 'income' ? 'var(--income)' : 'var(--expense)' }}>
                 {tx.type === 'income' ? '+' : '−'}฿{satangToTHB(tx.amount)}
               </div>
             </div>
