@@ -32,6 +32,7 @@ jobs:
           DATABASE_URL: postgresql://sliptrack:sliptrack@localhost:5432/sliptrack
           NEXTAUTH_SECRET: ci-secret-not-real
           NEXTAUTH_URL: http://localhost:3000
+          NEXT_TELEMETRY_DISABLED: 1
 
       - name: Wait for server
         run: npx wait-on http://localhost:3000/login --timeout 30000
