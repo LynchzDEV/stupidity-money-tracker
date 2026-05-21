@@ -1,0 +1,23 @@
+{"type":"server-started","port":62664,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:62664","screen_dir":"/Users/lynchz/Desktop/projects/income-and-expenses-ai-trackker/.superpowers/brainstorm/66106-1779264392/content","state_dir":"/Users/lynchz/Desktop/projects/income-and-expenses-ai-trackker/.superpowers/brainstorm/66106-1779264392/state"}
+{"type":"screen-added","file":"/Users/lynchz/Desktop/projects/income-and-expenses-ai-trackker/.superpowers/brainstorm/66106-1779264392/content/dashboard-features.html"}
+{"source":"user-event","type":"click","text":"A\n    \n      Monthly Summary\n      Total income vs expenses this month, net balance","choice":"a","id":null,"timestamp":1779264410459}
+{"source":"user-event","type":"click","text":"B\n    \n      Spending by Category\n      Pie/bar chart — food, transport, bills, etc.","choice":"b","id":null,"timestamp":1779264410859}
+{"source":"user-event","type":"click","text":"B\n    \n      Spending by Category\n      Pie/bar chart — food, transport, bills, etc.","choice":"b","id":null,"timestamp":1779264411489}
+{"source":"user-event","type":"click","text":"B\n    \n      Spending by Category\n      Pie/bar chart — food, transport, bills, etc.","choice":"b","id":null,"timestamp":1779264413084}
+{"source":"user-event","type":"click","text":"C\n    \n      Transaction History\n      Searchable list of all transactions with receipt images","choice":"c","id":null,"timestamp":1779264414689}
+{"source":"user-event","type":"click","text":"D\n    \n      Household View\n      Combined summary across all profiles in the group","choice":"d","id":null,"timestamp":1779264417027}
+{"source":"user-event","type":"click","text":"D\n    \n      Household View\n      Combined summary across all profiles in the group","choice":"d","id":null,"timestamp":1779264417818}
+{"type":"screen-added","file":"/Users/lynchz/Desktop/projects/income-and-expenses-ai-trackker/.superpowers/brainstorm/66106-1779264392/content/tech-stack.html"}
+{"source":"user-event","type":"click","text":"A\n    Next.js 14 (App Router)React fullstack, API routes built-in","choice":"fe-next","id":null,"timestamp":1779264556896}
+{"source":"user-event","type":"click","text":"B\n    Lucia AuthLightweight, sessions-based, full control","choice":"auth-lucia","id":null,"timestamp":1779264564166}
+{"source":"user-event","type":"click","text":"B\n    Lucia AuthLightweight, sessions-based, full control","choice":"auth-lucia","id":null,"timestamp":1779264692840}
+{"source":"user-event","type":"click","text":"C\n    ClerkHosted auth, easiest setup, free tier","choice":"auth-clerk","id":null,"timestamp":1779264701614}
+{"source":"user-event","type":"click","text":"A\n    Next.js 14 (App Router)React fullstack, API routes built-in","choice":"fe-next","id":null,"timestamp":1779264802173}
+{"source":"user-event","type":"click","text":"A\n    NextAuth.js v5Email/password + social login","choice":"auth-nextauth","id":null,"timestamp":1779264805734}
+{"source":"user-event","type":"click","text":"A\n    Tailwind CSS + shadcn/uiUtility-first, beautiful components","choice":"style-tailwind","id":null,"timestamp":1779264807643}
+{"source":"user-event","type":"click","text":"C\n    MinIO (self-hosted S3)S3-compatible, runs locally via Docker","choice":"storage-minio","id":null,"timestamp":1779264809717}
+{"source":"user-event","type":"click","text":"C\n    MinIO (self-hosted S3)S3-compatible, runs locally via Docker","choice":"storage-minio","id":null,"timestamp":1779264810506}
+{"source":"user-event","type":"click","text":"C\n    MinIO (self-hosted S3)S3-compatible, runs locally via Docker","choice":"storage-minio","id":null,"timestamp":1779264811606}
+{"type":"screen-added","file":"/Users/lynchz/Desktop/projects/income-and-expenses-ai-trackker/.superpowers/brainstorm/66106-1779264392/content/app-layout.html"}
+{"type":"screen-added","file":"/Users/lynchz/Desktop/projects/income-and-expenses-ai-trackker/.superpowers/brainstorm/66106-1779264392/content/book-selector-v2.html"}
+{"type":"server-stopped","reason":"idle timeout"}

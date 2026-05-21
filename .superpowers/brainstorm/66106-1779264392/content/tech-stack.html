@@ -1,0 +1,66 @@
+<h2>Pick your tech stack</h2>
+<p class="subtitle">Select one per category</p>
+
+<h3 style="margin-top:2rem">Frontend Framework</h3>
+<div class="options">
+  <div class="option" data-choice="fe-next" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content"><h3>Next.js 14 (App Router)</h3><p>React fullstack, API routes built-in</p></div>
+  </div>
+  <div class="option" data-choice="fe-remix" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content"><h3>Remix</h3><p>React fullstack, great for forms & mutations</p></div>
+  </div>
+  <div class="option" data-choice="fe-vite" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content"><h3>Vite + React (SPA)</h3><p>Pure frontend, needs separate backend</p></div>
+  </div>
+</div>
+
+<h3 style="margin-top:2rem">Auth</h3>
+<div class="options">
+  <div class="option" data-choice="auth-nextauth" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content"><h3>NextAuth.js v5</h3><p>Email/password + social login</p></div>
+  </div>
+  <div class="option" data-choice="auth-lucia" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content"><h3>Lucia Auth</h3><p>Lightweight, sessions-based, full control</p></div>
+  </div>
+  <div class="option" data-choice="auth-clerk" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content"><h3>Clerk</h3><p>Hosted auth, easiest setup, free tier</p></div>
+  </div>
+</div>
+
+<h3 style="margin-top:2rem">Styling</h3>
+<div class="options">
+  <div class="option" data-choice="style-tailwind" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content"><h3>Tailwind CSS + shadcn/ui</h3><p>Utility-first, beautiful components</p></div>
+  </div>
+  <div class="option" data-choice="style-chakra" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content"><h3>Chakra UI</h3><p>Component library, easy theming</p></div>
+  </div>
+  <div class="option" data-choice="style-mui" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content"><h3>Material UI (MUI)</h3><p>Google Material Design components</p></div>
+  </div>
+</div>
+
+<h3 style="margin-top:2rem">File Storage (receipts)</h3>
+<div class="options">
+  <div class="option" data-choice="storage-local" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content"><h3>Local filesystem</h3><p>Simple, no cost, self-hosted only</p></div>
+  </div>
+  <div class="option" data-choice="storage-s3" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content"><h3>AWS S3 / Cloudflare R2</h3><p>Cloud storage, works when deployed anywhere</p></div>
+  </div>
+  <div class="option" data-choice="storage-minio" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content"><h3>MinIO (self-hosted S3)</h3><p>S3-compatible, runs locally via Docker</p></div>
+  </div>
+</div>
