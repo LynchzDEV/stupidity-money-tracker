@@ -62,6 +62,20 @@ describe('buildMerchantSummary', () => {
     expect(result).toBe('LINE MAN: Food×3')
   })
 
+  it('caps output at 50 merchants even when more exist', async () => {
+    const manyMerchants = Array.from({ length: 60 }, (_, i) => ({
+      note: `Merchant ${i + 1}`,
+      category: 'Food',
+      _count: { note: 60 - i },
+    }))
+    mockGroupBy.mockResolvedValueOnce(manyMerchants)
+    const result = await buildMerchantSummary('book-1')
+    const lines = result.split('\n')
+    expect(lines).toHaveLength(50)
+    expect(lines[0]).toBe('Merchant 1: Food×60')
+    expect(lines[49]).toBe('Merchant 50: Food×11')
+  })
+
   it('queries with correct bookId and null filter', async () => {
     mockGroupBy.mockResolvedValueOnce([])
     await buildMerchantSummary('book-abc')

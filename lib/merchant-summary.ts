@@ -24,7 +24,7 @@ export async function buildMerchantSummary(bookId: string): Promise<string> {
       total: [...cats.values()].reduce((a, b) => a + b, 0),
       cats,
     }))
-    .sort((a, b) => b.total - a.total)
+    .sort((a, b) => b.total - a.total || a.merchant.localeCompare(b.merchant))
     .slice(0, 50)
     .map(({ merchant, cats }) => {
       const catStr = [...cats.entries()]
