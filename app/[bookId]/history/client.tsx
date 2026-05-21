@@ -17,8 +17,6 @@ const CAT_COLORS: Record<string, string> = {
   Bills: '#3548c4', Salary: '#1f8a5b', Transfer: '#0e5c3a', Other: '#7a7d76',
 }
 
-const FILTER_CHIPS = ['All', 'Expenses', 'Income', 'Food', 'Transport', 'Shopping', 'Bills', 'Salary', 'Other', 'Transfer']
-
 function satangToTHB(satang: number) {
   return (satang / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
@@ -47,18 +45,21 @@ export function HistoryClient({ book, transactions: initial, query }: { book: Bo
   const pathname = usePathname()
   const [, startTransition] = useTransition()
   const [search, setSearch] = useState(query)
-  const [activeChip, setActiveChip] = useState('All')
+  const [activeType, setActiveType] = useState<'all' | 'income' | 'expense'>('all')
+  const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [txs, setTxs] = useState(initial)
   const [editing, setEditing] = useState<Transaction | null>(null)
 
   useEffect(() => { setTxs(initial) }, [initial])
 
-  function applyFilters(q: string, chip: string) {
+  const categories = [...new Set(initial.map(t => t.category))].sort()
+
+  function applyFilters(q: string, type: 'all' | 'income' | 'expense', cat: string | null) {
     const params = new URLSearchParams()
     if (q) params.set('q', q)
-    if (chip === 'Expenses') params.set('type', 'expense')
-    else if (chip === 'Income') params.set('type', 'income')
-    else if (chip !== 'All') params.set('category', chip)
+    if (type === 'expense') params.set('type', 'expense')
+    else if (type === 'income') params.set('type', 'income')
+    if (cat) params.set('category', cat)
     startTransition(() => router.replace(`${pathname}?${params.toString()}`))
   }
 
@@ -73,6 +74,12 @@ export function HistoryClient({ book, transactions: initial, query }: { book: Bo
     setEditing(null)
     router.refresh()
   }
+
+  const TYPE_TABS: { label: string; value: 'all' | 'income' | 'expense' }[] = [
+    { label: 'All', value: 'all' },
+    { label: 'Income', value: 'income' },
+    { label: 'Expense', value: 'expense' },
+  ]
 
   const grouped = groupByDay(txs)
 
@@ -99,12 +106,12 @@ export function HistoryClient({ book, transactions: initial, query }: { book: Bo
           </svg>
           <input
             value={search}
-            onChange={(e) => { setSearch(e.target.value); applyFilters(e.target.value, activeChip) }}
+            onChange={(e) => { setSearch(e.target.value); applyFilters(e.target.value, activeType, activeCategory) }}
             placeholder="Search merchants, notes, ฿amount…"
             className="flex-1 bg-transparent text-[14px] outline-none text-[var(--ink)] placeholder:text-[var(--muted)]"
           />
           {search && (
-            <button onClick={() => { setSearch(''); applyFilters('', activeChip) }}
+            <button onClick={() => { setSearch(''); applyFilters('', activeType, activeCategory) }}
               className="text-[11px] px-1.5 py-0.5 rounded font-[family-name:var(--font-mono)]"
               style={{ color: 'var(--muted)', background: 'var(--hairline2)' }}>
               ×
@@ -112,21 +119,47 @@ export function HistoryClient({ book, transactions: initial, query }: { book: Bo
           )}
         </div>
 
-        {/* Filter chips */}
-        <div className="flex gap-1.5 overflow-x-auto scrollbar-none pb-1">
-          {FILTER_CHIPS.map((chip) => (
-            <button key={chip}
-              onClick={() => { setActiveChip(chip); applyFilters(search, chip) }}
-              className="px-2.5 py-1.5 rounded-full text-[12.5px] font-medium whitespace-nowrap active:opacity-80 transition-opacity flex-shrink-0"
+        {/* Type row */}
+        <div className="flex gap-1.5 mb-2">
+          {TYPE_TABS.map(({ label, value }) => (
+            <button key={value}
+              onClick={() => { setActiveType(value); applyFilters(search, value, activeCategory) }}
+              className="flex-1 py-1.5 rounded-full text-[12.5px] font-medium whitespace-nowrap active:opacity-80 transition-opacity"
               style={{
-                background: chip === activeChip ? 'var(--ink)' : 'transparent',
-                color: chip === activeChip ? '#fff' : 'var(--ink2)',
-                border: `1px solid ${chip === activeChip ? 'var(--ink)' : 'var(--hairline)'}`,
+                background: activeType === value ? 'var(--ink)' : 'transparent',
+                color: activeType === value ? '#fff' : 'var(--ink2)',
+                border: `1px solid ${activeType === value ? 'var(--ink)' : 'var(--hairline)'}`,
               }}>
-              {chip}
+              {label}
             </button>
           ))}
         </div>
+
+        {/* Category row */}
+        {categories.length > 0 && (
+          <div className="flex gap-1.5 overflow-x-auto scrollbar-none pb-1">
+            {categories.map((cat) => {
+              const c = CAT_COLORS[cat] ?? '#7a7d76'
+              const active = activeCategory === cat
+              return (
+                <button key={cat}
+                  onClick={() => {
+                    const next = active ? null : cat
+                    setActiveCategory(next)
+                    applyFilters(search, activeType, next)
+                  }}
+                  className="px-2.5 py-1.5 rounded-full text-[12.5px] font-medium whitespace-nowrap active:opacity-80 transition-opacity flex-shrink-0"
+                  style={{
+                    background: active ? c + '18' : 'transparent',
+                    color: active ? c : 'var(--ink2)',
+                    border: `1px solid ${active ? c : 'var(--hairline)'}`,
+                  }}>
+                  {cat}
+                </button>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {/* Timeline */}
