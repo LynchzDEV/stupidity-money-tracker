@@ -25,6 +25,7 @@ interface ExtractionResult {
   category?: string;
   date?: string;
   note?: string;
+  merchantName?: string;
   rejected?: boolean;
   rejectReason?: string;
   confidence: { amount: number; type: number; category: number; date: number };
