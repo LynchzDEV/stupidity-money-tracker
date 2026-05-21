@@ -9,6 +9,7 @@ interface ExtractionResult {
   category?: string
   date?: string
   note?: string
+  merchantName?: string
   confidence: { amount: number; type: number; category: number; date: number }
 }
 
@@ -16,7 +17,7 @@ interface ConfirmSheetProps {
   extraction: ExtractionResult
   previewUrl: string
   bookName: string
-  onSave: (data: { amount: number; type: string; category: string; date: string; note: string }) => void
+  onSave: (data: { amount: number; type: string; category: string; date: string; note: string; merchantName?: string }) => void
   onDiscard: () => void
 }
 
@@ -336,7 +337,7 @@ export function ConfirmSheet({ extraction, previewUrl, bookName, onSave, onDisca
           </button>
           <button
             disabled={!typeAnswered || !amount}
-            onClick={() => onSave({ amount, type, category, date, note })}
+            onClick={() => onSave({ amount, type, category, date, note, merchantName: extraction.merchantName })}
             className="flex-1 h-[52px] rounded-2xl text-white text-base font-semibold flex items-center justify-center gap-2 active:scale-[.97] transition-transform disabled:opacity-40"
             style={{ background: 'var(--accent)', boxShadow: '0 1px 0 rgba(255,255,255,.18) inset, 0 -1px 0 rgba(0,0,0,.15) inset, 0 2px 6px rgba(14,92,58,.25)' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

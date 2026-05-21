@@ -218,6 +218,7 @@ export function UploadPageClient({
     category: string;
     date: string;
     note: string;
+    merchantName?: string;
   }) {
     await fetch('/api/transactions', {
       method: 'POST',
