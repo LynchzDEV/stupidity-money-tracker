@@ -47,7 +47,7 @@ export async function POST(req: Request) {
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json()
-  const { bookId, amount, type, category, date, note, immichAssetId, confidenceJson } = body
+  const { bookId, amount, type, category, date, note, merchantName, immichAssetId, confidenceJson } = body
 
   if (!bookId || amount == null || !type || !category || !date) {
     return NextResponse.json({ error: 'bookId, amount, type, category, date required' }, { status: 400 })
@@ -64,6 +64,7 @@ export async function POST(req: Request) {
       category,
       date: new Date(date),
       note: note || null,
+      merchantName: merchantName || null,
       immichAssetId: immichAssetId || null,
       confidenceJson: confidenceJson || null,
     },
