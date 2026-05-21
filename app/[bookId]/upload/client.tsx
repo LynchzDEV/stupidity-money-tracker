@@ -23,10 +23,12 @@ interface ExtractionResult {
   category?: string;
   date?: string;
   note?: string;
+  rejected?: boolean;
+  rejectReason?: string;
   confidence: { amount: number; type: number; category: number; date: number };
 }
 
-type Stage = 'idle' | 'thinking' | 'confirm' | 'saved' | 'error';
+type Stage = 'idle' | 'thinking' | 'confirm' | 'saved' | 'error' | 'rejected';
 type CameraState = 'starting' | 'active' | 'denied' | 'unavailable';
 
 export function UploadPageClient({
@@ -194,6 +196,11 @@ export function UploadPageClient({
       }
       const data = await res.json();
       setAssetId(data.assetId ?? '');
+      if (data.extraction?.rejected) {
+        setErrorMsg(data.extraction.rejectReason ?? 'This image doesn\'t look like a receipt or bank slip.');
+        setStage('rejected');
+        return;
+      }
       setExtraction(data.extraction);
       setStage('confirm');
     } catch (err) {
@@ -417,6 +424,34 @@ export function UploadPageClient({
               style={{ background: 'var(--accent)' }}
             >
               Try again
+            </button>
+          </div>
+        </div>
+      )}
+
+      {stage === 'rejected' && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center px-8"
+          style={{ background: 'rgba(15,17,14,.55)', backdropFilter: 'blur(6px)' }}>
+          <div className="rounded-2xl p-6 text-center animate-pop w-full max-w-xs"
+            style={{ background: 'var(--surface)', border: '1px solid var(--hairline)', boxShadow: 'var(--shadow-md)' }}>
+            <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3"
+              style={{ background: 'var(--expense-bg)' }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--expense)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 8v4M12 16h.01"/>
+              </svg>
+            </div>
+            <div className="text-[15px] font-semibold text-[var(--ink)] mb-1.5">
+              Not a receipt
+            </div>
+            <div className="text-[13px] leading-relaxed mb-5" style={{ color: 'var(--muted)' }}>
+              {errorMsg}
+            </div>
+            <button
+              onClick={() => setStage('idle')}
+              className="w-full h-11 rounded-xl text-[14px] font-semibold text-white active:scale-95 transition-transform"
+              style={{ background: 'var(--accent)' }}>
+              Try another image
             </button>
           </div>
         </div>

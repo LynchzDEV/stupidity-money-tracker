@@ -4,6 +4,8 @@ export interface ExtractionResult {
   category?: string
   date?: string           // ISO date string YYYY-MM-DD
   note?: string
+  rejected?: boolean
+  rejectReason?: string
   confidence: {
     amount: number
     type: number
@@ -13,10 +15,14 @@ export interface ExtractionResult {
 }
 
 const SYSTEM_PROMPT_BASE = `You are a receipt and bank slip OCR assistant.
-Extract transaction data from the provided image and return ONLY a JSON object.
-No markdown, no explanation, no prose — only raw JSON.
+First, determine if the image is a financial document (receipt, invoice, bank slip, e-slip, PromptPay slip, payroll slip, or any document showing a monetary transaction).
 
-JSON shape:
+If the image is NOT a financial document (e.g. selfie, food photo, landscape, screenshot of social media, random object), return ONLY this JSON and nothing else:
+{ "rejected": true, "rejectReason": "<one short sentence why, e.g. 'This looks like a food photo, not a receipt.'>", "confidence": { "amount": 0, "type": 0, "category": 0, "date": 0 } }
+
+If it IS a financial document, extract the data and return ONLY a JSON object. No markdown, no explanation, no prose.
+
+JSON shape for valid documents:
 {
   "amount": <number in THB, required>,
   "type": <"income" if money flows TO the account owner, "expense" if FROM — omit if unclear>,
