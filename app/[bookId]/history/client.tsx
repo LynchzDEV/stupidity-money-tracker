@@ -274,7 +274,8 @@ export function HistoryClient({ book, transactions: initial, allCategories, quer
                           alt=""
                           width={40}
                           height={48}
-                          className="rounded-[6px] object-cover flex-shrink-0"
+unoptimized
+className="rounded-[6px] object-cover flex-shrink-0"
                           style={{ border: '1px solid var(--hairline)' }}
                         />
                       ) : (

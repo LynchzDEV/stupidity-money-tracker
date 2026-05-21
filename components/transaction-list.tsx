@@ -46,7 +46,8 @@ export function TransactionList({ transactions }: TransactionListProps) {
                 alt="Receipt"
                 width={40}
                 height={40}
-                className="rounded-lg object-cover flex-shrink-0 bg-[var(--bg)]"
+unoptimized
+className="rounded-lg object-cover flex-shrink-0 bg-[var(--bg)]"
               />
             ) : (
               <div className="w-10 h-10 rounded-lg bg-[var(--bg)] flex items-center justify-center text-lg flex-shrink-0">
