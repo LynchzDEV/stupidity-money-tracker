@@ -14,11 +14,38 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
+  themeColor: '#0e5c3a',
 }
 
 export const metadata: Metadata = {
-  title: 'SlipTrack',
-  description: 'Receipt → ledger in 2 taps',
+  metadataBase: new URL('https://sliptrack.app'),
+  title: {
+    default: 'SlipTrack',
+    template: '%s · SlipTrack',
+  },
+  description: 'Snap a receipt. Done. AI-powered expense tracking for individuals.',
+  openGraph: {
+    type: 'website',
+    siteName: 'SlipTrack',
+    title: 'SlipTrack',
+    description: 'Snap a receipt. Done. AI-powered expense tracking for individuals.',
+    images: [{ url: '/api/og', width: 1200, height: 630, alt: 'SlipTrack' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'SlipTrack',
+    description: 'Snap a receipt. Done. AI-powered expense tracking for individuals.',
+    images: ['/api/og'],
+  },
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.png', sizes: '32x32', type: 'image/png' },
+    ],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180' }],
+  },
+  manifest: '/manifest.json',
+  robots: { index: false, follow: false },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
