@@ -33,8 +33,9 @@ export function CategoryPicker({ value, onChange, scrollable = false }: Props) {
   useEffect(() => { setCustom(loadCustom()) }, [])
   useEffect(() => { if (open) inputRef.current?.focus() }, [open])
 
-  // last 5 custom cats shown as tags
-  const shownCustom = custom.slice(-5)
+  // total 8 tags including base; remaining slots go to most recent custom
+  const customSlots = Math.max(0, 8 - BASE_CATEGORIES.length)
+  const shownCustom = custom.slice(-customSlots)
   const all = [...BASE_CATEGORIES, ...shownCustom]
 
   const isBase = BASE_CATEGORIES.includes(value)
