@@ -19,6 +19,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://sliptrack.app'),
+  alternates: { canonical: 'https://sliptrack.app' },
   title: {
     default: 'SlipTrack',
     template: '%s · SlipTrack',

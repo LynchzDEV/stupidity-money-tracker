@@ -2,18 +2,31 @@ import type { Metadata } from 'next'
 import { signIn } from '@/lib/auth'
 
 export const metadata: Metadata = {
-  title: 'Sign in',
-  description: 'Sign in to SlipTrack to track your receipts and expenses.',
+  title: 'Track Receipts with AI',
+  description: 'Upload a photo of any receipt. Our AI instantly extracts details & organizes expenses. Start for free.',
   robots: { index: true, follow: false },
   openGraph: {
-    title: 'Sign in to SlipTrack',
-    description: 'Snap a receipt. Done.',
+    title: 'Track Receipts with AI · SlipTrack',
+    description: 'Upload a photo of any receipt. Our AI instantly extracts details & organizes expenses. Start for free.',
   },
+}
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'SlipTrack',
+  description: 'AI-powered receipt and expense tracking application',
+  applicationCategory: 'FinanceApplication',
+  operatingSystem: 'Android, iOS, Web',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'THB' },
+  url: 'https://sliptrack.app',
+  image: 'https://sliptrack.app/api/og',
 }
 
 export default function LoginPage() {
   return (
     <main className="min-h-[100dvh] bg-[var(--bg)] relative overflow-hidden flex flex-col">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       {/* Aurora blobs */}
       <div className="absolute top-[-80px] right-[-80px] w-[280px] h-[280px] rounded-full"
         style={{ background: 'radial-gradient(circle, rgba(14,92,58,.18), transparent 70%)', filter: 'blur(20px)' }} />
@@ -29,13 +42,13 @@ export default function LoginPage() {
             <path d="M9 10h6M9 14h6M9 18h4"/>
           </svg>
         </div>
-        <div className="mt-5 text-[38px] leading-none tracking-tight text-[var(--ink)]"
+        <h1 className="mt-5 text-[38px] leading-none tracking-tight text-[var(--ink)]"
           style={{ fontFamily: 'var(--font-serif), Georgia, serif', fontWeight: 400 }}>
           SlipTrack
-        </div>
-        <div className="text-[15px] text-[var(--muted)] mt-1 px-10">
+        </h1>
+        <p className="text-[15px] text-[var(--muted)] mt-1 px-10">
           Snap a receipt. We do the rest.
-        </div>
+        </p>
       </div>
 
       {/* Receipt card previews */}
