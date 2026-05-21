@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { getThumbnailUrl } from '@/lib/immich'
 import { EditTransactionSheet } from '@/components/edit-transaction-sheet'
@@ -21,15 +22,18 @@ function satangToTHB(satang: number) {
 export function RecentTransactions({ transactions: initial }: { transactions: Transaction[] }) {
   const [txs, setTxs] = useState(initial)
   const [editing, setEditing] = useState<Transaction | null>(null)
+  const router = useRouter()
 
   function handleSaved(updated: Transaction) {
     setTxs(prev => prev.map(t => t.id === updated.id ? updated : t))
     setEditing(null)
+    router.refresh()
   }
 
   function handleDeleted(id: string) {
     setTxs(prev => prev.filter(t => t.id !== id))
     setEditing(null)
+    router.refresh()
   }
 
   if (txs.length === 0) {
