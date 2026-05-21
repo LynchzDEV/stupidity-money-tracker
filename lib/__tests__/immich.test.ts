@@ -16,7 +16,7 @@ beforeEach(() => {
 describe('getThumbnailUrl', () => {
   it('returns correct thumbnail URL', () => {
     const url = getThumbnailUrl('asset-abc')
-    expect(url).toBe('https://immich.example.com/api/assets/asset-abc/thumbnail?size=preview')
+    expect(url).toBe('/api/immich/asset-abc/thumbnail')
   })
 })
 
