@@ -74,6 +74,14 @@ input, textarea, select {
   0%   { top: 0% }
   100% { top: 100% }
 }
+@keyframes ripple {
+  0%   { transform: scale(0.6); opacity: 0.7 }
+  100% { transform: scale(2.4); opacity: 0 }
+}
+@keyframes border-beam {
+  from { offset-distance: 0% }
+  to   { offset-distance: 100% }
+}
 
 .shimmer {
   background: linear-gradient(90deg,

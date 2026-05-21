@@ -5,6 +5,8 @@ import { BookChip } from '@/components/book-chip';
 import { BookSheet } from '@/components/book-sheet';
 import { ConfirmSheet } from '@/components/confirm-sheet';
 import { SavedToast } from '@/components/saved-toast';
+import { Ripple } from '@/components/aceternity/ripple';
+import { BorderBeam } from '@/components/aceternity/border-beam';
 
 type CaptureMode = 'Receipt' | 'Bank slip' | 'Manual';
 
@@ -308,22 +310,13 @@ export function UploadPageClient({
         </div>
       )}
 
-      {/* Starting — aperture + sonar rings */}
+      {/* Starting — Aceternity Ripple + aperture icon */}
       {cameraState === 'starting' && (
         <div className="absolute inset-0 flex flex-col items-center justify-center"
-          style={{ background: 'radial-gradient(ellipse 60% 50% at 50% 52%, rgba(14,92,58,.18) 0%, #0c0d0a 70%)' }}>
-          {/* Sonar rings */}
-          <div className="relative flex items-center justify-center" style={{ width: 120, height: 120 }}>
-            {[0, 0.55, 1.1].map((delay, i) => (
-              <div key={i} className="absolute rounded-full" style={{
-                inset: 0,
-                border: '1.5px solid rgba(14,92,58,.55)',
-                animation: `ring-out 1.8s ease-out ${delay}s infinite`,
-              }} />
-            ))}
-            {/* Aperture — slow spin */}
+          style={{ background: 'radial-gradient(ellipse 60% 50% at 50% 52%, rgba(14,92,58,.15) 0%, #0c0d0a 70%)' }}>
+          <Ripple numCircles={5} baseSize={56} spread={68} color="rgba(14,92,58">
             <div style={{ animation: 'aperture-spin 6s linear infinite' }}>
-              <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+              <svg width="56" height="56" viewBox="0 0 64 64" fill="none">
                 {Array.from({ length: 6 }, (_, i) => {
                   const angle = (i * 60 * Math.PI) / 180
                   const cx = 32 + 10 * Math.cos(angle)
@@ -337,65 +330,46 @@ export function UploadPageClient({
                 <circle cx="32" cy="32" r="4.5" fill="rgba(255,255,255,.55)" />
               </svg>
             </div>
-          </div>
-          <div className="mt-7 text-[12.5px] font-medium tracking-widest uppercase"
-            style={{ color: 'rgba(255,255,255,.38)', letterSpacing: '0.1em' }}>
+          </Ripple>
+          <div className="mt-10 text-[12px] font-medium tracking-widest uppercase"
+            style={{ color: 'rgba(255,255,255,.35)', letterSpacing: '0.1em' }}>
             Starting camera
             {[0, 1, 2].map(i => (
-              <span key={i} style={{
-                display: 'inline-block', marginLeft: 3,
-                animation: `pulse-dot 1.4s ease-in-out ${i * 0.22}s infinite`,
-              }}>·</span>
+              <span key={i} style={{ display: 'inline-block', marginLeft: 3, animation: `pulse-dot 1.4s ease-in-out ${i * 0.22}s infinite` }}>·</span>
             ))}
           </div>
         </div>
       )}
 
-      {/* Thinking — preview + scan line + corner brackets */}
+      {/* Thinking — Aceternity BorderBeam card + scan line */}
       {stage === 'thinking' && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-5"
-          style={{ background: 'rgba(0,0,0,.72)' }}>
+          style={{ background: 'rgba(0,0,0,.75)' }}>
           {previewUrl && (
             <div className="relative rounded-2xl overflow-hidden"
-              style={{ maxWidth: 220, boxShadow: '0 0 0 1px rgba(255,255,255,.15), 0 16px 40px rgba(0,0,0,.6)' }}>
+              style={{ maxWidth: 220, boxShadow: '0 16px 48px rgba(0,0,0,.7)' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={previewUrl} alt="" className="block max-h-64 object-contain opacity-80"
+              <img src={previewUrl} alt="" className="block max-h-64 object-contain opacity-75"
                 style={{ maxWidth: 220 }} />
               {/* Scan line */}
               <div className="absolute left-0 right-0 h-[2px] pointer-events-none"
                 style={{
-                  background: 'linear-gradient(90deg, transparent 0%, rgba(14,92,58,.9) 30%, rgba(100,255,180,.9) 50%, rgba(14,92,58,.9) 70%, transparent 100%)',
-                  boxShadow: '0 0 8px 2px rgba(14,92,58,.6)',
+                  background: 'linear-gradient(90deg, transparent, rgba(100,255,180,.9) 50%, transparent)',
+                  boxShadow: '0 0 10px 3px rgba(14,92,58,.7)',
                   animation: 'scan-line 1.6s linear infinite',
                 }} />
-              {/* Corner brackets */}
-              {([[0,0],[0,1],[1,0],[1,1]] as [number,number][]).map(([v,h], k) => (
-                <div key={k} style={{
-                  position: 'absolute',
-                  [v ? 'bottom' : 'top']: 6,
-                  [h ? 'right' : 'left']: 6,
-                  width: 14, height: 14,
-                  borderTop: !v ? '2px solid rgba(14,255,120,.7)' : undefined,
-                  borderBottom: v ? '2px solid rgba(14,255,120,.7)' : undefined,
-                  borderLeft: !h ? '2px solid rgba(14,255,120,.7)' : undefined,
-                  borderRight: h ? '2px solid rgba(14,255,120,.7)' : undefined,
-                  borderTopLeftRadius: !v && !h ? 4 : 0,
-                  borderTopRightRadius: !v && h ? 4 : 0,
-                  borderBottomLeftRadius: v && !h ? 4 : 0,
-                  borderBottomRightRadius: v && h ? 4 : 0,
-                } as React.CSSProperties} />
-              ))}
+              <BorderBeam colorTo="#44ff90" colorFrom="transparent" duration={2.5} size={120} />
             </div>
           )}
           <div className="flex items-center gap-2">
             <div className="flex gap-1">
               {[0,1,2].map(i => (
                 <div key={i} className="w-1.5 h-1.5 rounded-full"
-                  style={{ background: 'var(--accent)', animation: `pulse-dot 1.1s ease-in-out ${i * 0.18}s infinite` }} />
+                  style={{ background: '#44ff90', animation: `pulse-dot 1.1s ease-in-out ${i * 0.18}s infinite` }} />
               ))}
             </div>
             <span className="text-[12.5px] font-medium tracking-wide"
-              style={{ color: 'rgba(255,255,255,.55)', letterSpacing: '0.06em' }}>
+              style={{ color: 'rgba(255,255,255,.5)', letterSpacing: '0.06em' }}>
               Reading {captureMode === 'Bank slip' ? 'slip' : 'receipt'}
             </span>
           </div>
