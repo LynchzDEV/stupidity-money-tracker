@@ -1,11 +1,13 @@
 'use client'
 import { useRouter, usePathname } from 'next/navigation'
-import { useState, useTransition, useEffect } from 'react'
+import { useState, useTransition, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { getThumbnailUrl } from '@/lib/immich'
 import { TabBar } from '@/components/tab-bar'
 import { EditTransactionSheet } from '@/components/edit-transaction-sheet'
+import { isNaturalLanguage, filtersToParams } from '@/lib/search'
+import type { AiSearchFilters } from '@/lib/search'
 
 interface Book { id: string; name: string; emoji: string }
 interface Transaction {
@@ -50,16 +52,62 @@ export function HistoryClient({ book, transactions: initial, allCategories, quer
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [txs, setTxs] = useState(initial)
   const [editing, setEditing] = useState<Transaction | null>(null)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiMode, setAiMode] = useState(false)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => { setTxs(initial) }, [initial])
 
-  function applyFilters(q: string, type: 'all' | 'income' | 'expense', cat: string | null) {
-    const params = new URLSearchParams()
-    if (q) params.set('q', q)
+  function applyFilters(q: string, type: 'all' | 'income' | 'expense', cat: string | null, extraParams?: URLSearchParams) {
+    const params = extraParams ? new URLSearchParams(extraParams) : new URLSearchParams()
+    if (!extraParams) {
+      if (q) params.set('q', q)
+    }
     if (type === 'expense') params.set('type', 'expense')
     else if (type === 'income') params.set('type', 'income')
     if (cat) params.set('category', cat)
     startTransition(() => router.replace(`${pathname}?${params.toString()}`))
+  }
+
+  const runAiSearch = useCallback(async (q: string, type: 'all' | 'income' | 'expense', cat: string | null) => {
+    setAiLoading(true)
+    try {
+      const res = await fetch('/api/search/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: q }),
+      })
+      if (!res.ok) throw new Error('failed')
+      const filters = await res.json() as AiSearchFilters
+      const aiParams = filtersToParams(filters)
+      setAiMode(true)
+      applyFilters(q, type, cat, aiParams)
+    } catch {
+      setAiMode(false)
+      applyFilters(q, type, cat)
+    } finally {
+      setAiLoading(false)
+    }
+  }, [pathname]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function handleSearch(value: string) {
+    setSearch(value)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+
+    if (!value.trim()) {
+      setAiMode(false)
+      applyFilters('', activeType, activeCategory)
+      return
+    }
+
+    if (isNaturalLanguage(value)) {
+      debounceRef.current = setTimeout(() => {
+        runAiSearch(value, activeType, activeCategory)
+      }, 500)
+    } else {
+      setAiMode(false)
+      applyFilters(value, activeType, activeCategory)
+    }
   }
 
   function handleSaved(updated: Transaction) {
@@ -94,17 +142,25 @@ export function HistoryClient({ book, transactions: initial, allCategories, quer
         {/* Search */}
         <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl mb-3"
           style={{ background: 'var(--surface)', border: '1px solid var(--hairline2)' }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="1.6" strokeLinecap="round">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="var(--muted)" strokeWidth="1.6" strokeLinecap="round"
+            style={{ animation: aiLoading ? 'pulse 1s ease-in-out infinite' : 'none' }}>
             <circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/>
           </svg>
           <input
             value={search}
-            onChange={(e) => { setSearch(e.target.value); applyFilters(e.target.value, activeType, activeCategory) }}
+            onChange={(e) => handleSearch(e.target.value)}
             placeholder="Search merchants, notes, ฿amount…"
             className="flex-1 bg-transparent text-[14px] outline-none text-[var(--ink)] placeholder:text-[var(--muted)]"
           />
+          {aiMode && !aiLoading && (
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full flex-shrink-0"
+              style={{ background: 'var(--ink)', color: '#fff', fontFamily: 'var(--font-mono)' }}>
+              ✦ AI
+            </span>
+          )}
           {search && (
-            <button onClick={() => { setSearch(''); applyFilters('', activeType, activeCategory) }}
+            <button onClick={() => { setSearch(''); setAiMode(false); applyFilters('', activeType, activeCategory) }}
               className="text-[11px] px-1.5 py-0.5 rounded font-[family-name:var(--font-mono)]"
               style={{ color: 'var(--muted)', background: 'var(--hairline2)' }}>
               ×
@@ -115,7 +171,11 @@ export function HistoryClient({ book, transactions: initial, allCategories, quer
         {/* Type row */}
         <div className="flex gap-1.5 mb-2">
           <button
-            onClick={() => { setActiveType('all'); applyFilters(search, 'all', activeCategory) }}
+            onClick={() => {
+              setActiveType('all')
+              if (aiMode) runAiSearch(search, 'all', activeCategory)
+              else applyFilters(search, 'all', activeCategory)
+            }}
             className="px-3 py-1.5 rounded-full text-[12.5px] font-medium whitespace-nowrap active:opacity-80 transition-opacity flex-shrink-0"
             style={{
               background: activeType === 'all' ? 'var(--ink)' : 'transparent',
@@ -125,7 +185,11 @@ export function HistoryClient({ book, transactions: initial, allCategories, quer
             All
           </button>
           <button
-            onClick={() => { setActiveType('income'); applyFilters(search, 'income', activeCategory) }}
+            onClick={() => {
+              setActiveType('income')
+              if (aiMode) runAiSearch(search, 'income', activeCategory)
+              else applyFilters(search, 'income', activeCategory)
+            }}
             className="flex-1 py-1.5 rounded-full text-[13px] font-semibold whitespace-nowrap active:opacity-80 transition-opacity"
             style={{
               background: activeType === 'income' ? 'var(--income)' : 'transparent',
@@ -135,7 +199,11 @@ export function HistoryClient({ book, transactions: initial, allCategories, quer
             Income
           </button>
           <button
-            onClick={() => { setActiveType('expense'); applyFilters(search, 'expense', activeCategory) }}
+            onClick={() => {
+              setActiveType('expense')
+              if (aiMode) runAiSearch(search, 'expense', activeCategory)
+              else applyFilters(search, 'expense', activeCategory)
+            }}
             className="flex-1 py-1.5 rounded-full text-[13px] font-semibold whitespace-nowrap active:opacity-80 transition-opacity"
             style={{
               background: activeType === 'expense' ? 'var(--expense)' : 'transparent',
@@ -156,7 +224,8 @@ export function HistoryClient({ book, transactions: initial, allCategories, quer
                   onClick={() => {
                     const next = active ? null : cat
                     setActiveCategory(next)
-                    applyFilters(search, activeType, next)
+                    if (aiMode) runAiSearch(search, activeType, next)
+                    else applyFilters(search, activeType, next)
                   }}
                   className="px-2.5 py-1.5 rounded-full text-[12.5px] font-medium whitespace-nowrap active:opacity-80 transition-opacity flex-shrink-0"
                   style={{

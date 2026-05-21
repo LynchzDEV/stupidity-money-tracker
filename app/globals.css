@@ -100,3 +100,8 @@ input, textarea, select {
 .animate-stream { animation: stream-in .55s cubic-bezier(.4,0,.2,1) both; }
 .scrollbar-none { scrollbar-width: none; }
 .scrollbar-none::-webkit-scrollbar { display: none; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
