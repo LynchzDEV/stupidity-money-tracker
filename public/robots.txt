@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Allow: /login
+Disallow: /api/
+Disallow: /books/
+Sitemap: https://sliptrack.app/sitemap.xml
