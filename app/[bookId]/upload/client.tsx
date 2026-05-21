@@ -190,6 +190,7 @@ export function UploadPageClient({
     const form = new FormData();
     form.append('image', file);
     form.append('mode', captureMode === 'Bank slip' ? 'bank_slip' : 'receipt');
+    form.append('bookId', book.id);
     try {
       const res = await fetch('/api/extract', { method: 'POST', body: form });
       if (!res.ok) {
