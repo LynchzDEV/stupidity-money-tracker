@@ -319,8 +319,8 @@ export function UploadPageClient({
               <svg width="56" height="56" viewBox="0 0 64 64" fill="none">
                 {Array.from({ length: 6 }, (_, i) => {
                   const angle = (i * 60 * Math.PI) / 180
-                  const cx = 32 + 10 * Math.cos(angle)
-                  const cy = 32 + 10 * Math.sin(angle)
+                  const cx = Math.round((32 + 10 * Math.cos(angle)) * 1e10) / 1e10
+                  const cy = Math.round((32 + 10 * Math.sin(angle)) * 1e10) / 1e10
                   return (
                     <ellipse key={i} cx={cx} cy={cy} rx={11} ry={5}
                       transform={`rotate(${i * 60 + 30} ${cx} ${cy})`}
