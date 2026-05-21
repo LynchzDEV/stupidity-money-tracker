@@ -65,11 +65,13 @@ export function HistoryClient({ book, transactions: initial, query }: { book: Bo
   function handleSaved(updated: Transaction) {
     setTxs(prev => prev.map(t => t.id === updated.id ? updated : t))
     setEditing(null)
+    router.refresh()
   }
 
   function handleDeleted(id: string) {
     setTxs(prev => prev.filter(t => t.id !== id))
     setEditing(null)
+    router.refresh()
   }
 
   const grouped = groupByDay(txs)

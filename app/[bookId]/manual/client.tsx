@@ -64,6 +64,7 @@ export function ManualEntryClient({ book }: { book: Book }) {
           immichAssetId: null,
         }),
       })
+      router.refresh()
       router.push(`/${book.id}/upload`)
     } catch {
       setSaving(false)

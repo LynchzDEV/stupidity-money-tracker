@@ -227,6 +227,7 @@ export function UploadPageClient({
         ...confirmed,
       }),
     });
+    router.refresh();
     setStage('saved');
     setTimeout(() => {
       setStage('idle');
