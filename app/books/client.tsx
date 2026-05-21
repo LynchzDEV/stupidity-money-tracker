@@ -41,7 +41,7 @@ export function BookSelectorClient({ books: initial }: { books: Book[] }) {
   }
 
   return (
-    <main className="min-h-screen bg-[var(--bg)] px-5 pt-16 pb-8">
+    <main className="min-h-[100dvh] bg-[var(--bg)] px-5 pt-16 pb-8">
       <h1 className="font-[family-name:var(--font-serif)] text-3xl text-[var(--ink)] mb-1">
         Your Books
       </h1>

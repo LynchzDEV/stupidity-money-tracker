@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function LoginPage() {
   return (
-    <main className="min-h-screen bg-[var(--bg)] relative overflow-hidden flex flex-col">
+    <main className="min-h-[100dvh] bg-[var(--bg)] relative overflow-hidden flex flex-col">
       {/* Aurora blobs */}
       <div className="absolute top-[-80px] right-[-80px] w-[280px] h-[280px] rounded-full"
         style={{ background: 'radial-gradient(circle, rgba(14,92,58,.18), transparent 70%)', filter: 'blur(20px)' }} />

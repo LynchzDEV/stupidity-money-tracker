@@ -129,7 +129,7 @@ export function HistoryClient({ book, transactions: initial, allCategories, quer
   const grouped = groupByDay(txs)
 
   return (
-    <main className="min-h-screen flex flex-col relative" style={{ background: 'var(--bg)' }}>
+    <main className="min-h-[100dvh] flex flex-col relative" style={{ background: 'var(--bg)' }}>
       {/* Header */}
       <div className="px-5 pt-14 pb-3">
         <div className="flex items-center justify-between mb-4">
