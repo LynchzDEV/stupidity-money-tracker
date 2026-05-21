@@ -22,11 +22,10 @@ export interface AiSearchParams {
 const NL_PATTERN = /(\d+\s*[-–]\s*\d+|around|about|between|near|more than|less than|under|over|last\s+\w+|this\s+(week|month)|yesterday)/i
 
 export function isNaturalLanguage(query: string): boolean {
-  if (!query.trim()) return false
-  if (/^฿?\d+(\.\d+)?$/.test(query.trim())) return false
-  const words = query.trim().split(/\s+/)
-  if (words.length < 3 && !NL_PATTERN.test(query)) return false
-  return NL_PATTERN.test(query)
+  const q = query.trim()
+  if (!q) return false
+  if (/^฿?\d+(\.\d+)?$/.test(q)) return false
+  return NL_PATTERN.test(q)
 }
 
 export function filtersToParams(filters: AiSearchFilters): URLSearchParams {
@@ -44,11 +43,14 @@ export function filtersToParams(filters: AiSearchFilters): URLSearchParams {
 
 export function paramsToFilters(sp: URLSearchParams): AiSearchParams | null {
   if (!sp.get('aiMode')) return null
+  const rawType = sp.get('aiType')
+  const rawMin = sp.get('aiMin')
+  const rawMax = sp.get('aiMax')
   return {
-    amountMin: sp.get('aiMin') ? Number(sp.get('aiMin')) : undefined,
-    amountMax: sp.get('aiMax') ? Number(sp.get('aiMax')) : undefined,
+    amountMin: rawMin ? (isNaN(Number(rawMin)) ? undefined : Number(rawMin)) : undefined,
+    amountMax: rawMax ? (isNaN(Number(rawMax)) ? undefined : Number(rawMax)) : undefined,
     category: sp.get('aiCat') ?? undefined,
-    type: (sp.get('aiType') as 'income' | 'expense') ?? undefined,
+    type: (rawType === 'income' || rawType === 'expense') ? rawType : undefined,
     keyword: sp.get('aiKey') ?? undefined,
     dateFrom: sp.get('aiFrom') ?? undefined,
     dateTo: sp.get('aiTo') ?? undefined,

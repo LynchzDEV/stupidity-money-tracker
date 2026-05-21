@@ -32,6 +32,9 @@ describe('isNaturalLanguage', () => {
   it('returns false for empty string', () => {
     expect(isNaturalLanguage('')).toBe(false)
   })
+  it('returns true for two-word NL phrase "last week"', () => {
+    expect(isNaturalLanguage('last week')).toBe(true)
+  })
 })
 
 describe('filtersToParams', () => {
@@ -66,5 +69,13 @@ describe('paramsToFilters', () => {
   })
   it('returns null when aiMode not set', () => {
     expect(paramsToFilters(new URLSearchParams('q=food'))).toBeNull()
+  })
+  it('ignores invalid aiType value', () => {
+    const f = paramsToFilters(new URLSearchParams('aiMode=1&aiType=garbage'))
+    expect(f?.type).toBeUndefined()
+  })
+  it('ignores NaN aiMin value', () => {
+    const f = paramsToFilters(new URLSearchParams('aiMode=1&aiMin=abc'))
+    expect(f?.amountMin).toBeUndefined()
   })
 })
