@@ -52,6 +52,7 @@ export function ConfirmSheet({ extraction, previewUrl, bookName, onSave, onDisca
   const [category, setCategory] = useState(extraction.category ?? 'Other')
   const [date, setDate] = useState(extraction.date ?? new Date().toISOString().split('T')[0])
   const [note, setNote] = useState(extraction.note ?? '')
+  const [merchantName, setMerchantName] = useState(extraction.merchantName ?? '')
   const [typeAnswered, setTypeAnswered] = useState(!!extraction.type && (extraction.confidence.type ?? 0) >= 0.7)
 
   const [chatHistory, setChatHistory] = useState<ChatMsg[]>([])
@@ -100,7 +101,7 @@ export function ConfirmSheet({ extraction, previewUrl, bookName, onSave, onDisca
     setTypeAnswered(true)
   }
 
-  const currentExtraction = { amount, type, category, date, note, confidence: extraction.confidence }
+  const currentExtraction = { amount, type, category, date, note, merchantName, confidence: extraction.confidence }
 
   async function sendMessage() {
     const text = input.trim()
@@ -123,6 +124,7 @@ export function ConfirmSheet({ extraction, previewUrl, bookName, onSave, onDisca
       if (updates.category) setCategory(updates.category)
       if (updates.date) setDate(updates.date)
       if (updates.note != null) setNote(updates.note)
+      if (updates.merchantName != null) setMerchantName(updates.merchantName)
       setChatHistory(prev => [...prev, { role: 'ai', text: data.message ?? 'Done.' }])
     } catch {
       setChatHistory(prev => [...prev, { role: 'ai', text: 'Something went wrong. Try again.' }])
@@ -413,7 +415,7 @@ export function ConfirmSheet({ extraction, previewUrl, bookName, onSave, onDisca
           ) : (
             <button
               disabled={!typeAnswered || !amount}
-              onClick={() => onSave({ amount, type, category, date, note, merchantName: extraction.merchantName })}
+              onClick={() => onSave({ amount, type, category, date, note, merchantName: merchantName || extraction.merchantName })}
               className="flex-1 h-[52px] rounded-2xl text-white text-base font-semibold flex items-center justify-center gap-2 active:scale-[.97] transition-transform disabled:opacity-40"
               style={{ background: 'var(--accent)', boxShadow: '0 1px 0 rgba(255,255,255,.18) inset, 0 -1px 0 rgba(0,0,0,.15) inset, 0 2px 6px rgba(14,92,58,.25)' }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

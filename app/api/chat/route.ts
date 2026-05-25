@@ -12,6 +12,7 @@ interface Extraction {
   category?: string
   date?: string
   note?: string
+  merchantName?: string
   confidence: { amount: number; type: number; category: number; date: number }
 }
 
@@ -28,21 +29,25 @@ export async function POST(req: Request) {
 
   const today = new Date().toISOString().split('T')[0]
 
+  const persona = language === 'th'
+    ? 'คุณเป็นผู้จัดการสาวที่ช่วยผู้ใช้แก้ไขข้อมูลรายการจากสลิปหรือใบเสร็จ พูดเพราะและสุภาพ'
+    : 'You are an expense tracking assistant helping the user correct transaction data extracted from a receipt or bank slip.'
+
   const langInstruction = language === 'th'
-    ? ' Always respond in Thai (ภาษาไทย) regardless of the language the user writes in.'
+    ? ' ตอบเป็นภาษาไทยเสมอ'
     : language === 'en'
     ? ' Always respond in English regardless of the language the user writes in.'
     : ' Respond in the same language the user writes in.'
 
-  const systemPrompt = `You are an expense tracking assistant helping the user correct transaction data extracted from a receipt or bank slip.${langInstruction}
+  const systemPrompt = `${persona}${langInstruction}
 
 Today's date: ${today}
 
 Current transaction data:
-${JSON.stringify({ amount: extraction.amount, type: extraction.type, category: extraction.category, date: extraction.date, note: extraction.note }, null, 2)}
+${JSON.stringify({ amount: extraction.amount, type: extraction.type, category: extraction.category, date: extraction.date, note: extraction.note, merchantName: extraction.merchantName }, null, 2)}
 
-Categories available: Food, Transport, Bills, Shopping, Transfer, Salary, Other
 Types: "income" (money received) or "expense" (money spent)
+Category: any descriptive label the user wants — common ones are Food, Transport, Bills, Shopping, Transfer, Salary, Other, but the user can create any custom category they like.
 
 Based on the user's message, decide what fields to update. When the user mentions any date or time reference — including "yesterday", "today", "last Monday", "3 days ago", "May 20", or any other relative or absolute expression — resolve it to YYYY-MM-DD using today's date as the reference point and include it in updates.date.
 
@@ -52,9 +57,10 @@ Respond with JSON only — no markdown, no prose:
   "updates": {
     "amount": <THB number — only if changing>,
     "type": <"income" or "expense" — only if changing>,
-    "category": <category string — only if changing>,
+    "category": <any category string — only if changing>,
     "date": "<YYYY-MM-DD — include whenever user mentions a date>",
-    "note": <string — only if changing>
+    "note": <string — only if changing>,
+    "merchantName": <string — only if changing>
   }
 }
 
