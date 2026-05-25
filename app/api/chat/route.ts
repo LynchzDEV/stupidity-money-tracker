@@ -19,15 +19,22 @@ export async function POST(req: Request) {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { extraction, history, userMessage } = await req.json() as {
+  const { extraction, history, userMessage, language } = await req.json() as {
     extraction: Extraction
     history: ChatMessage[]
     userMessage: string
+    language?: 'auto' | 'th' | 'en'
   }
 
   const today = new Date().toISOString().split('T')[0]
 
-  const systemPrompt = `You are an expense tracking assistant helping the user correct transaction data extracted from a receipt or bank slip.
+  const langInstruction = language === 'th'
+    ? ' Always respond in Thai (ภาษาไทย) regardless of the language the user writes in.'
+    : language === 'en'
+    ? ' Always respond in English regardless of the language the user writes in.'
+    : ' Respond in the same language the user writes in.'
+
+  const systemPrompt = `You are an expense tracking assistant helping the user correct transaction data extracted from a receipt or bank slip.${langInstruction}
 
 Today's date: ${today}
 

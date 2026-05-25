@@ -57,8 +57,35 @@ export function ConfirmSheet({ extraction, previewUrl, bookName, onSave, onDisca
   const [chatHistory, setChatHistory] = useState<ChatMsg[]>([])
   const [input, setInput] = useState('')
   const [thinking, setThinking] = useState(false)
+  const [language, setLanguage] = useState<'auto' | 'th' | 'en'>(() => {
+    if (typeof window === 'undefined') return 'auto'
+    return (localStorage.getItem('ai-language') as 'auto' | 'th' | 'en') ?? 'auto'
+  })
+  const [langPopoverOpen, setLangPopoverOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const langPopoverRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!langPopoverOpen) return
+    function onOutside(e: MouseEvent | TouchEvent) {
+      if (langPopoverRef.current && !langPopoverRef.current.contains(e.target as Node)) {
+        setLangPopoverOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', onOutside)
+    document.addEventListener('touchstart', onOutside)
+    return () => {
+      document.removeEventListener('mousedown', onOutside)
+      document.removeEventListener('touchstart', onOutside)
+    }
+  }, [langPopoverOpen])
+
+  function selectLanguage(lang: 'auto' | 'th' | 'en') {
+    setLanguage(lang)
+    localStorage.setItem('ai-language', lang)
+    setLangPopoverOpen(false)
+  }
 
   const needsType = !typeAnswered
   const amtFormatted = formatTHB(thbToSatang(amount))
@@ -87,7 +114,7 @@ export function ConfirmSheet({ extraction, previewUrl, bookName, onSave, onDisca
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ extraction: currentExtraction, history: chatHistory, userMessage: text }),
+        body: JSON.stringify({ extraction: currentExtraction, history: chatHistory, userMessage: text, language }),
       })
       const data = await res.json()
       const updates = data.updates ?? {}
@@ -127,7 +154,53 @@ export function ConfirmSheet({ extraction, previewUrl, bookName, onSave, onDisca
           <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
           {bookName}
         </div>
-        <div className="w-9" />
+        <div ref={langPopoverRef} style={{ position: 'relative' }}>
+          <button
+            onClick={() => setLangPopoverOpen(p => !p)}
+            className="w-9 h-9 rounded-full flex items-center justify-center active:opacity-60 transition-opacity"
+            style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--ink2)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <ellipse cx="12" cy="12" rx="4" ry="10"/>
+              <path d="M2 12h20"/>
+            </svg>
+          </button>
+          {langPopoverOpen && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 'calc(100% + 8px)',
+                right: 0,
+                background: 'var(--surface)',
+                border: '1px solid var(--hairline)',
+                borderRadius: 14,
+                boxShadow: '0 4px 20px rgba(0,0,0,.12)',
+                overflow: 'hidden',
+                zIndex: 50,
+                minWidth: 110,
+              }}>
+              {(['auto', 'th', 'en'] as const).map((lang, i, arr) => (
+                <button
+                  key={lang}
+                  onClick={() => selectLanguage(lang)}
+                  className="flex items-center gap-2.5 w-full text-left active:opacity-60 transition-opacity"
+                  style={{
+                    padding: '11px 14px',
+                    fontSize: 13,
+                    fontWeight: language === lang ? 600 : 400,
+                    color: language === lang ? 'var(--accent)' : 'var(--ink)',
+                    background: language === lang ? 'var(--accent-soft)' : 'transparent',
+                    borderBottom: i < arr.length - 1 ? '1px solid var(--hairline)' : 'none',
+                  }}>
+                  <span style={{ width: 14, color: 'var(--accent)', fontSize: 11 }}>
+                    {language === lang ? '✓' : ''}
+                  </span>
+                  {lang === 'auto' ? 'Auto' : lang === 'th' ? 'ภาษาไทย' : 'English'}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Chat scroll area */}
