@@ -6,7 +6,8 @@ import { prisma } from './prisma'
 
 const trustHost =
   process.env.AUTH_TRUST_HOST === 'true' ||
-  process.env.NODE_ENV === 'production'
+  process.env.NODE_ENV === 'production' ||
+  process.env.NODE_ENV === 'development'
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost,

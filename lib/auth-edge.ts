@@ -5,7 +5,8 @@ import Google from 'next-auth/providers/google'
 // Used only in proxy.ts to verify JWT session cookies.
 const trustHost =
   process.env.AUTH_TRUST_HOST === 'true' ||
-  process.env.NODE_ENV === 'production'
+  process.env.NODE_ENV === 'production' ||
+  process.env.NODE_ENV === 'development'
 
 export const { auth } = NextAuth({
   trustHost,
