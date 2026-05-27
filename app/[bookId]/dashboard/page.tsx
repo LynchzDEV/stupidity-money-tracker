@@ -124,7 +124,10 @@ export default async function DashboardPage({ params }: { params: Promise<{ book
         <div className="px-5 mt-6">
           <div className="flex justify-between items-baseline mb-3">
             <div className="text-[13px] font-semibold text-[var(--ink)]">Where it went</div>
-            <div className="text-[12px]" style={{ color: 'var(--muted)' }}>By category</div>
+            <Link href={`/${bookId}/trends`} className="text-[12px] font-medium flex items-center gap-0.5" style={{ color: 'var(--accent)' }}>
+              Trends
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+            </Link>
           </div>
           <div className="flex flex-col gap-3">
             {cats.map(([cat, total]) => (
