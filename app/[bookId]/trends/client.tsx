@@ -183,7 +183,7 @@ export function TrendsClient({
           </div>
 
           {/* Explanation */}
-          <div style={{ fontSize: 13, color: 'var(--ink2)', marginTop: 10, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 13, color: 'var(--ink2)', marginTop: 2, lineHeight: 1.45 }}>
             {outDelta <= 0 ? (
               <>
                 Spent{' '}
