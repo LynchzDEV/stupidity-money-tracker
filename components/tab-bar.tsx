@@ -6,7 +6,7 @@ type Tab = 'stats' | 'camera' | 'history'
 export function TabBar({ bookId, active }: { bookId: string; active: Tab }) {
   return (
     <div
-      className="absolute left-3 right-3 flex items-center justify-around"
+      className="fixed left-3 right-3 flex items-center justify-around"
       style={{
         bottom: 26, height: 60, padding: '4px 8px', borderRadius: 22, zIndex: 30,
         background: 'rgba(255,255,255,.92)',

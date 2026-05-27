@@ -1,5 +1,6 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 
 export const BASE_CATEGORIES = ['Food', 'Transport', 'Shopping', 'Bills', 'Salary', 'Transfer']
 export const CAT_COLORS: Record<string, string> = {
@@ -29,9 +30,23 @@ export function CategoryPicker({ value, onChange, scrollable = false }: Props) {
   const [highlighted, setHighlighted] = useState(-1)
   const inputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const anchorRef = useRef<HTMLDivElement>(null)
+  const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number; width: number } | null>(null)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => { setCustom(loadCustom()) }, [])
-  useEffect(() => { if (open) inputRef.current?.focus() }, [open])
+  useEffect(() => { setMounted(true) }, [])
+  useEffect(() => {
+    if (open) {
+      inputRef.current?.focus()
+      if (anchorRef.current) {
+        const rect = anchorRef.current.getBoundingClientRect()
+        setDropdownPos({ top: rect.bottom + 6, left: rect.left, width: Math.max(rect.width, 140) })
+      }
+    } else {
+      setDropdownPos(null)
+    }
+  }, [open])
 
   // total 8 tags including base; remaining slots go to most recent custom
   const customSlots = Math.max(0, 7 - BASE_CATEGORIES.length)
@@ -124,7 +139,7 @@ export function CategoryPicker({ value, onChange, scrollable = false }: Props) {
           {isHiddenCustom ? value : '+ Other'}
         </button>
       ) : (
-        <div className="flex-shrink-0 relative" style={{ minWidth: 0 }}>
+        <div ref={anchorRef} className="flex-shrink-0 relative" style={{ minWidth: 0 }}>
           <div className="flex items-center gap-1 px-2.5 py-1 rounded-full"
             style={{ border: '1.5px solid var(--accent)', background: 'var(--surface)' }}>
             <input
@@ -152,15 +167,19 @@ export function CategoryPicker({ value, onChange, scrollable = false }: Props) {
             </button>
           </div>
 
-          {suggestions.length > 0 && (
+          {mounted && suggestions.length > 0 && dropdownPos && createPortal(
             <div
               ref={dropdownRef}
-              className="absolute left-0 top-full mt-1 rounded-xl overflow-hidden z-50"
+              className="rounded-xl overflow-hidden"
               style={{
+                position: 'fixed',
+                top: dropdownPos.top,
+                left: dropdownPos.left,
+                minWidth: dropdownPos.width,
                 background: 'var(--surface)',
                 border: '1.5px solid var(--hairline)',
-                boxShadow: '0 4px 16px rgba(0,0,0,0.10)',
-                minWidth: 140,
+                boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+                zIndex: 9999,
               }}>
               {suggestions.map((s, i) => (
                 <button
@@ -174,7 +193,8 @@ export function CategoryPicker({ value, onChange, scrollable = false }: Props) {
                   {s}
                 </button>
               ))}
-            </div>
+            </div>,
+            document.body
           )}
         </div>
       )}

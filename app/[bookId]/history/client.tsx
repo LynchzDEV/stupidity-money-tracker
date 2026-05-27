@@ -134,13 +134,23 @@ export function HistoryClient({ book, transactions: initial, allCategories, quer
       <div className="px-5 pt-14 pb-3">
         <div className="flex items-center justify-between mb-4">
           <div className="text-[24px] font-semibold tracking-tight text-[var(--ink)]">History</div>
-          <Link href={`/${book.id}/upload`}
-            className="w-9 h-9 rounded-full flex items-center justify-center"
-            style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h3l1.5-2h6l1.5 2h3A1.5 1.5 0 0 1 21 7.5v10A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5v-10Z"/><circle cx="12" cy="13" r="3.5"/>
-            </svg>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href={`/${book.id}/album`}
+              className="w-9 h-9 rounded-full flex items-center justify-center"
+              style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/>
+                <rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/>
+              </svg>
+            </Link>
+            <Link href={`/${book.id}/upload`}
+              className="w-9 h-9 rounded-full flex items-center justify-center"
+              style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h3l1.5-2h6l1.5 2h3A1.5 1.5 0 0 1 21 7.5v10A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5v-10Z"/><circle cx="12" cy="13" r="3.5"/>
+              </svg>
+            </Link>
+          </div>
         </div>
 
         {/* Search */}

@@ -521,7 +521,13 @@ export function UploadPageClient({
           {(['Receipt', 'Bank slip', 'Manual'] as CaptureMode[]).map(m => (
             <button
               key={m}
-              onClick={() => setCaptureMode(m)}
+              onClick={() => {
+                if (m === 'Manual') {
+                  router.push(`/${book.id}/manual`)
+                } else {
+                  setCaptureMode(m)
+                }
+              }}
               className="active:opacity-80 transition-opacity"
               style={{
                 padding: '5px 12px', borderRadius: 99, fontSize: 12, fontWeight: 500,
