@@ -57,7 +57,7 @@ export function AlbumClient({ book, items }: { book: Book; items: AlbumItem[] })
       >
         <button
           onClick={() => router.back()}
-          className="w-9 h-9 rounded-full flex items-center justify-center active:opacity-60 transition-opacity mr-5"
+          className="w-9 h-9 rounded-full flex items-center justify-center active:opacity-60 transition-opacity mr-3"
           style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
