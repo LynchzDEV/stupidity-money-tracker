@@ -163,7 +163,7 @@ export function TrendsClient({
             display: 'flex', alignItems: 'flex-start', gap: 10, marginTop: 4,
             color: heroGood ? 'var(--income)' : 'var(--expense)',
           }}>
-            <div style={{ fontFamily: 'var(--font-serif), Georgia, serif', fontSize: 52, letterSpacing: '-.025em', lineHeight: 1 }}>
+            <div style={{ fontFamily: 'var(--font-serif), Georgia, serif', fontSize: 52, letterSpacing: '-.025em', lineHeight: 1, margin: '10px 0' }}>
               {outDelta <= 0 ? '−' : '+'}฿{fmtBahtAbs(outDelta)}
             </div>
             <div style={{
