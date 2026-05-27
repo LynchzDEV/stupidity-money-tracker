@@ -62,7 +62,7 @@ export async function POST(req: Request) {
       amount: thbToSatang(amount),
       type,
       category,
-      date: new Date(date),
+      date: new Date(),
       note: note || null,
       merchantName: merchantName || null,
       immichAssetId: immichAssetId || null,
