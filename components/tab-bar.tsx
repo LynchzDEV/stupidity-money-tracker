@@ -8,7 +8,7 @@ export function TabBar({ bookId, active }: { bookId: string; active: Tab }) {
     <div
       className="fixed left-3 right-3 flex items-center justify-around"
       style={{
-        bottom: 26, height: 60, padding: '4px 8px', borderRadius: 22, zIndex: 30,
+        bottom: 'max(16px, env(safe-area-inset-bottom, 16px))', height: 60, padding: '4px 8px', borderRadius: 22, zIndex: 30,
         background: 'rgba(255,255,255,.92)',
         border: '1px solid var(--hairline)',
         backdropFilter: 'blur(20px) saturate(180%)',

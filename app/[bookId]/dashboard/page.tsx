@@ -48,7 +48,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ book
   const recent = transactions.slice(0, 10).map(t => ({ ...t, date: t.date.toISOString() }))
 
   return (
-    <main className="min-h-[100dvh] scrollbar-none overflow-auto pb-28 relative" style={{ background: 'var(--bg)' }}>
+    <main className="min-h-[100dvh] scrollbar-none overflow-auto relative" style={{ background: 'var(--bg)', paddingBottom: 'calc(96px + max(16px, env(safe-area-inset-bottom, 16px)))' }}>
       {/* Header */}
       <div className="flex items-center justify-between px-5 pt-14 pb-1">
         <Link href={`/${bookId}/upload`}

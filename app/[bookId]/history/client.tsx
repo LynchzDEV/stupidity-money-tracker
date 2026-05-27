@@ -256,7 +256,7 @@ export function HistoryClient({ book, transactions: initial, allCategories, quer
       </div>
 
       {/* Timeline */}
-      <div className="flex-1 overflow-auto scrollbar-none px-5 pb-28">
+      <div className="flex-1 overflow-auto scrollbar-none px-5" style={{ paddingBottom: 'calc(96px + max(16px, env(safe-area-inset-bottom, 16px)))' }}>
         {grouped.length === 0 ? (
           <div className="text-center py-16 text-[14px]" style={{ color: 'var(--muted)' }}>No transactions found</div>
         ) : grouped.map(([day, txs]) => {
