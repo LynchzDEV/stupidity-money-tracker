@@ -43,15 +43,13 @@ export function AlbumClient({ book, items }: { book: Book; items: AlbumItem[] })
   const grouped = groupByMonth(items)
 
   return (
-    <main className="min-h-[100dvh] flex flex-col" style={{ background: '#000' }}>
+    <main className="min-h-[100dvh] flex flex-col" style={{ background: 'var(--bg)' }}>
       {/* Header — iOS Photos style */}
       <div
         className="flex items-center px-4 pt-14 pb-3"
         style={{
-          background: 'rgba(0,0,0,.92)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(255,255,255,.08)',
+          background: 'var(--bg)',
+          borderBottom: '1px solid var(--hairline)',
           position: 'sticky',
           top: 0,
           zIndex: 10,
@@ -59,16 +57,16 @@ export function AlbumClient({ book, items }: { book: Book; items: AlbumItem[] })
       >
         <button
           onClick={() => router.back()}
-          className="w-9 h-9 rounded-full flex items-center justify-center active:opacity-60 transition-opacity mr-3"
-          style={{ background: 'rgba(255,255,255,.1)' }}
+          className="w-9 h-9 rounded-full flex items-center justify-center active:opacity-60 transition-opacity mr-5"
+          style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M15 18l-6-6 6-6"/>
           </svg>
         </button>
         <div>
-          <div className="text-white text-[20px] font-semibold tracking-tight leading-none">Album</div>
-          <div className="text-[12px] mt-0.5" style={{ color: 'rgba(255,255,255,.5)' }}>{items.length} receipts</div>
+          <div className="text-[20px] font-semibold tracking-tight leading-none" style={{ color: 'var(--ink)' }}>Album</div>
+          <div className="text-[12px] mt-0.5" style={{ color: 'var(--muted)' }}>{items.length} receipts</div>
         </div>
       </div>
 
@@ -77,18 +75,18 @@ export function AlbumClient({ book, items }: { book: Book; items: AlbumItem[] })
         {items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 px-8 text-center">
             <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
-              style={{ background: 'rgba(255,255,255,.08)' }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+              style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="4" width="18" height="16" rx="2"/>
                 <circle cx="9" cy="10" r="1.5"/>
                 <path d="M21 16l-5-5-9 9"/>
               </svg>
             </div>
-            <div className="text-white text-[16px] font-medium mb-1">No receipts yet</div>
-            <div className="text-[13px]" style={{ color: 'rgba(255,255,255,.4)' }}>Photos from scanned receipts appear here</div>
+            <div className="text-[16px] font-medium mb-1" style={{ color: 'var(--ink)' }}>No receipts yet</div>
+            <div className="text-[13px]" style={{ color: 'var(--muted)' }}>Photos from scanned receipts appear here</div>
             <Link href={`/${book.id}/upload`}
-              className="mt-5 px-5 py-2.5 rounded-full text-[14px] font-semibold text-white"
-              style={{ background: 'rgba(255,255,255,.15)', border: '1px solid rgba(255,255,255,.18)' }}>
+              className="mt-5 px-5 py-2.5 rounded-full text-[14px] font-semibold"
+              style={{ background: 'var(--accent)', color: '#fff' }}>
               Scan a receipt
             </Link>
           </div>
@@ -97,8 +95,8 @@ export function AlbumClient({ book, items }: { book: Book; items: AlbumItem[] })
             <div key={monthKey}>
               {/* Month header */}
               <div className="px-4 pt-5 pb-2">
-                <div className="text-white text-[17px] font-semibold tracking-tight">{monthLabel(monthKey)}</div>
-                <div className="text-[12px]" style={{ color: 'rgba(255,255,255,.45)' }}>{monthItems.length} items</div>
+                <div className="text-[17px] font-semibold tracking-tight" style={{ color: 'var(--ink)' }}>{monthLabel(monthKey)}</div>
+                <div className="text-[12px]" style={{ color: 'var(--muted)' }}>{monthItems.length} items</div>
               </div>
 
               {/* Photo grid — 3 col, 2px gap like iPhone */}
@@ -119,13 +117,13 @@ export function AlbumClient({ book, items }: { book: Book; items: AlbumItem[] })
                     {/* Bottom gradient + label */}
                     <div
                       className="absolute bottom-0 left-0 right-0 px-1.5 pb-1.5 pt-4"
-                      style={{ background: 'linear-gradient(to top, rgba(0,0,0,.7) 0%, transparent 100%)' }}
+                      style={{ background: 'linear-gradient(to top, rgba(0,0,0,.92) 0%, rgba(0,0,0,.55) 45%, transparent 100%)' }}
                     >
-                      <div className="text-white text-[10.5px] font-medium truncate leading-tight">
+                      <div className="text-white text-[11px] font-semibold truncate leading-tight drop-shadow">
                         {item.note || item.category}
                       </div>
                       <div
-                        className="text-[9.5px] font-semibold"
+                        className="text-[10px] font-bold drop-shadow"
                         style={{ color: item.type === 'income' ? '#4cd97b' : '#ff6b6b', fontVariantNumeric: 'tabular-nums' }}
                       >
                         {item.type === 'income' ? '+' : '−'}฿{satangToTHB(item.amount)}
