@@ -413,9 +413,8 @@ function NetTrendChart({ months }: { months: MonthData[] }) {
         {/* Floating callout on last point */}
         <div style={{
           position: 'absolute',
-          left: `${(last[0] / W) * 100}%`,
+          right: 0,
           top: last[1] - 36,
-          transform: 'translateX(-50%)',
           whiteSpace: 'nowrap',
           background: 'var(--ink)', color: '#fff',
           padding: '4px 8px', borderRadius: 8,
@@ -426,8 +425,8 @@ function NetTrendChart({ months }: { months: MonthData[] }) {
         }}>
           {months[months.length - 1].label} · {lastNet >= 0 ? '+' : '−'}{fmtBaht(lastNet)}
           <div style={{
-            position: 'absolute', bottom: -4, left: '50%',
-            transform: 'translateX(-50%) rotate(45deg)',
+            position: 'absolute', bottom: -4, right: 10,
+            transform: 'rotate(45deg)',
             width: 8, height: 8, background: 'var(--ink)',
           }} />
         </div>
