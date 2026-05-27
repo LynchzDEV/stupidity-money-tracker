@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { thbToSatang } from '@/lib/utils'
+import { thbToSatang, parseDateString } from '@/lib/utils'
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
@@ -20,7 +20,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       ...(body.amount != null && { amount: thbToSatang(body.amount) }),
       ...(body.type && { type: body.type }),
       ...(body.category && { category: body.category }),
-      ...(body.date && { date: new Date(body.date) }),
+      ...(body.date && { date: parseDateString(body.date) }),
       ...(body.note !== undefined && { note: body.note }),
     },
   })
