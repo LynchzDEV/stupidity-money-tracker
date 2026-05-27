@@ -13,7 +13,10 @@ Mobile-first AI income & expense tracker. Point your camera at a receipt or bank
 - **Multiple books** — separate ledgers (e.g. Personal, Business)
 - **Dashboard** — monthly income/expense summary with category breakdown chart
 - **History** — searchable, filterable transaction list grouped by day
+- **Trends** — spending trends with delta analysis and AI-generated insights
+- **AI chat** — ask questions about your transactions in natural language
 - **Custom categories** — add your own; autocomplete on reuse
+- **Photo album** — browse receipt images backed up to Immich
 - **Auth** — Google OAuth or dev bypass
 
 ## Tech Stack
@@ -23,7 +26,8 @@ Mobile-first AI income & expense tracker. Point your camera at a receipt or bank
 | Framework | Next.js 16 (App Router) |
 | Database | PostgreSQL 16 via Prisma 7 |
 | Auth | NextAuth v5 (Google + Credentials) |
-| AI | OpenRouter → Gemini 2.0 Flash (vision) |
+| AI | OpenRouter → Gemini 2.5 Flash (vision + chat) |
+| Animations | Framer Motion |
 | Photo storage | Immich (optional) |
 | Styling | Tailwind CSS + CSS variables |
 | Runtime | Bun |
@@ -65,7 +69,7 @@ AUTH_GOOGLE_ID=...
 AUTH_GOOGLE_SECRET=...
 
 OPENROUTER_API_KEY=sk-or-...
-OPENROUTER_MODEL=google/gemini-2.0-flash-001   # optional, this is the default
+OPENROUTER_MODEL=google/gemini-2.5-flash   # optional, this is the default
 
 # Optional — Immich photo backup
 IMMICH_URL=https://your-immich-instance
@@ -104,7 +108,17 @@ app/
     upload/            — camera + AI extraction
     manual/            — manual entry form
     history/           — searchable transaction list
+    trends/            — spending trend analysis + AI insights
+    album/             — receipt photo gallery (Immich)
   books/               — book switcher
+  api/
+    extract/           — AI receipt extraction endpoint
+    transactions/      — CRUD
+    books/             — book management
+    chat/              — AI chat endpoint
+    search/            — transaction search
+    immich/            — Immich proxy
+    og/                — Open Graph image generation
 components/            — UI components
 lib/                   — auth, prisma, openrouter, immich
 prisma/                — schema + migrations
