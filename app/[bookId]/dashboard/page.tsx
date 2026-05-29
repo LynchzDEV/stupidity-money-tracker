@@ -4,6 +4,8 @@ import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import { TabBar } from '@/components/tab-bar'
 import { RecentTransactions } from '@/components/recent-transactions'
+import { RecurringReminders } from '@/components/recurring-reminders'
+import { listDueReminders } from '@/lib/recurring-reminders'
 
 const CAT_COLORS: Record<string, string> = {
   Food: '#b2492c', Transport: '#a07212', Shopping: '#3a7d52',
@@ -46,6 +48,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ book
 
   const month = now.toLocaleString('en-US', { month: 'long', year: 'numeric' })
   const recent = transactions.slice(0, 10).map(t => ({ ...t, date: t.date.toISOString() }))
+  const dueReminders = await listDueReminders(bookId, now)
 
   return (
     <main className="min-h-[100dvh] scrollbar-none overflow-auto relative" style={{ background: 'var(--bg)', paddingBottom: 'calc(96px + max(16px, env(safe-area-inset-bottom, 16px)))' }}>
@@ -67,6 +70,12 @@ export default async function DashboardPage({ params }: { params: Promise<{ book
       </div>
 
       <div className="px-5 mt-2 text-[13px]" style={{ color: 'var(--muted)' }}>{month} · Month so far</div>
+
+      {dueReminders.length > 0 && (
+        <div className="px-5 mt-3">
+          <RecurringReminders reminders={dueReminders} />
+        </div>
+      )}
 
       {/* Balance hero card */}
       <div className="px-5 mt-3">

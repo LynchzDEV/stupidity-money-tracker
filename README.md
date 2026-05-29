@@ -10,6 +10,7 @@ Mobile-first AI income & expense tracker. Point your camera at a receipt or bank
 
 - **AI scan** — photograph receipts or bank slips; Gemini extracts structured data
 - **Manual entry** — fallback form with category picker and date/note fields
+- **Recurring** — flag a transaction "repeat monthly"; on the due day a confirm card appears on the dashboard (and a pill on the camera screen) to add it in one tap, skip the month, or stop repeating — never auto-inserted
 - **Multiple books** — separate ledgers (e.g. Personal, Business)
 - **Dashboard** — monthly income/expense summary with category breakdown chart
 - **History** — searchable, filterable transaction list grouped by day

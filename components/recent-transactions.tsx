@@ -8,6 +8,7 @@ import { EditTransactionSheet } from '@/components/edit-transaction-sheet'
 interface Transaction {
   id: string; amount: number; type: string; category: string
   date: string; note: string | null; immichAssetId: string | null
+  recurringRuleId?: string | null
 }
 
 const CAT_COLORS: Record<string, string> = {

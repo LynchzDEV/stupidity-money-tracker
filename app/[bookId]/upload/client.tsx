@@ -7,6 +7,7 @@ import { ConfirmSheet } from '@/components/confirm-sheet';
 import { SavedToast } from '@/components/saved-toast';
 import { Ripple } from '@/components/aceternity/ripple';
 import { BorderBeam } from '@/components/aceternity/border-beam';
+import { RecurringBanner } from '@/components/recurring-banner';
 
 type CaptureMode = 'Receipt' | 'Bank slip' | 'Manual';
 
@@ -37,9 +38,11 @@ type CameraState = 'starting' | 'active' | 'denied' | 'unavailable';
 export function UploadPageClient({
   book,
   books,
+  dueRecurringCount = 0,
 }: {
   book: Book;
   books: Book[];
+  dueRecurringCount?: number;
 }) {
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -464,6 +467,12 @@ export function UploadPageClient({
           </svg>
         </button>
       </div>
+
+      {stage === 'idle' && dueRecurringCount > 0 && (
+        <div className="absolute left-0 right-0 z-10 flex justify-center px-4" style={{ top: 104 }}>
+          <RecurringBanner bookId={book.id} count={dueRecurringCount} />
+        </div>
+      )}
 
       {/* Viewfinder corners + auto-detect badge (idle, camera active, not manual) */}
       {stage === 'idle' && cameraState === 'active' && captureMode !== 'Manual' && (

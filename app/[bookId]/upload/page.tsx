@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { redirect, notFound } from 'next/navigation'
 import { UploadPageClient } from './client'
+import { listDueReminders } from '@/lib/recurring-reminders'
 
 export default async function UploadPage({ params }: { params: Promise<{ bookId: string }> }) {
   const session = await auth()
@@ -19,5 +20,7 @@ export default async function UploadPage({ params }: { params: Promise<{ bookId:
     orderBy: { createdAt: 'asc' },
   })
 
-  return <UploadPageClient book={book} books={books} />
+  const dueCount = (await listDueReminders(bookId)).length
+
+  return <UploadPageClient book={book} books={books} dueRecurringCount={dueCount} />
 }

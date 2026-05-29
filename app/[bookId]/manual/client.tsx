@@ -15,6 +15,7 @@ export function ManualEntryClient({ book }: { book: Book }) {
   const [saving, setSaving] = useState(false)
   const [showDate, setShowDate] = useState(false)
   const [showNote, setShowNote] = useState(false)
+  const [repeatMonthly, setRepeatMonthly] = useState(false)
 
   const displayAmount = amountStr || '0'
   const amountNum = parseFloat(amountStr) || 0
@@ -51,19 +52,23 @@ export function ManualEntryClient({ book }: { book: Book }) {
     if (!amountNum || saving) return
     setSaving(true)
     try {
-      await fetch('/api/transactions', {
+      const payload = { bookId: book.id, amount: amountNum, type, category, date, note }
+      const res = await fetch('/api/transactions', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          bookId: book.id,
-          amount: amountNum,
-          type,
-          category,
-          date,
-          note,
-          immichAssetId: null,
-        }),
+        body: JSON.stringify({ ...payload, immichAssetId: null }),
       })
+      if (!res.ok) throw new Error('save failed')
+
+      if (repeatMonthly) {
+        const ruleRes = await fetch('/api/recurring', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+        if (!ruleRes.ok) throw new Error('recurring failed')
+      }
+
       router.refresh()
       router.push(`/${book.id}/upload`)
     } catch {
@@ -178,6 +183,22 @@ export function ManualEntryClient({ book }: { book: Book }) {
             className="px-3.5 py-3 rounded-xl text-[14px] outline-none text-[var(--ink)] placeholder:text-[var(--muted)]"
             style={{ background: 'var(--surface)', border: '1px solid var(--hairline2)' }} />
         )}
+        <button
+          onClick={() => setRepeatMonthly(v => !v)}
+          className="flex items-center justify-between px-3.5 py-3 rounded-xl active:opacity-80 transition-opacity"
+          style={{ background: 'var(--surface)', border: '1px solid var(--hairline2)' }}>
+          <span className="text-[13px] flex items-center gap-2" style={{ color: 'var(--muted)' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 2v6h6M21 12a9 9 0 1 1-3-6.7L21 8"/>
+            </svg>
+            Repeat monthly
+          </span>
+          <span className="relative inline-block w-[42px] h-[24px] rounded-full transition-colors flex-shrink-0"
+            style={{ background: repeatMonthly ? 'var(--accent)' : 'var(--hairline)' }}>
+            <span className="absolute top-[2px] w-[20px] h-[20px] rounded-full bg-white transition-all"
+              style={{ left: repeatMonthly ? 20 : 2, boxShadow: '0 1px 2px rgba(0,0,0,.2)' }} />
+          </span>
+        </button>
       </div>
 
       {/* Keypad */}

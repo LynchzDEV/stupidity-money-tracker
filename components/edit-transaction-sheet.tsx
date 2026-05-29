@@ -6,6 +6,7 @@ import { CategoryPicker } from '@/components/category-picker'
 interface Transaction {
   id: string; amount: number; type: string; category: string
   date: string; note: string | null; immichAssetId: string | null
+  recurringRuleId?: string | null
 }
 
 function satangToTHB(satang: number) {
@@ -28,6 +29,20 @@ export function EditTransactionSheet({ tx, onSave, onDelete, onClose }: Props) {
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [recurring, setRecurring] = useState(!!tx.recurringRuleId)
+  const [stopping, setStopping] = useState(false)
+
+  async function handleStopRepeating() {
+    if (stopping || !tx.recurringRuleId) return
+    setStopping(true)
+    try {
+      const res = await fetch(`/api/recurring/${tx.recurringRuleId}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('failed')
+      setRecurring(false)
+    } finally {
+      setStopping(false)
+    }
+  }
 
   async function handleSave() {
     if (saving) return
@@ -160,6 +175,23 @@ export function EditTransactionSheet({ tx, onSave, onDelete, onClose }: Props) {
                 style={{ background: 'var(--surface)', border: '1px solid var(--hairline2)' }}
               />
             </div>
+
+            {/* Recurring */}
+            {recurring && (
+              <div className="flex items-center justify-between px-3.5 py-3 rounded-2xl"
+                style={{ background: 'var(--accent-soft)', border: '1px solid var(--accent-mid)' }}>
+                <span className="text-[13px] font-medium flex items-center gap-2" style={{ color: 'var(--accent-ink)' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 2v6h6M21 12a9 9 0 1 1-3-6.7L21 8"/>
+                  </svg>
+                  Repeats monthly
+                </span>
+                <button onClick={handleStopRepeating} disabled={stopping}
+                  className="text-[12px] font-semibold active:opacity-60 disabled:opacity-50" style={{ color: 'var(--expense)' }}>
+                  {stopping ? '…' : 'Stop'}
+                </button>
+              </div>
+            )}
 
             {/* Actions */}
             <div className="flex gap-2.5 pt-1 pb-1">
