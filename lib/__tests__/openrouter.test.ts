@@ -93,6 +93,45 @@ describe('extractFromImage', () => {
     expect(result.note).toBe('LINE MAN Siam Paragon 3F')
   })
 
+  it('injects existing categories and a reuse instruction when provided', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        choices: [{ message: { content: JSON.stringify({
+          amount: 250, type: 'expense', category: 'ชาร์จรถไฟฟ้า',
+          date: '2026-05-21', note: 'EA Anywhere',
+          confidence: { amount: 0.95, type: 0.9, category: 0.8, date: 0.9 },
+        }) } }],
+      }),
+    })
+
+    await extractFromImage('base64data', 'receipt', '2026-05-21', '', ['Food', 'ชาร์จรถไฟฟ้า', 'Transport'])
+
+    const body = JSON.parse(mockFetch.mock.calls[0][1].body)
+    const systemContent: string = body.messages[0].content
+    expect(systemContent).toContain('ชาร์จรถไฟฟ้า')
+    expect(systemContent).toContain('Existing categories')
+  })
+
+  it('does not inject existing categories section when list is empty', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        choices: [{ message: { content: JSON.stringify({
+          amount: 50, type: 'expense', category: 'Other',
+          date: '2026-05-21', note: 'Unknown',
+          confidence: { amount: 0.9, type: 0.8, category: 0.5, date: 0.9 },
+        }) } }],
+      }),
+    })
+
+    await extractFromImage('base64data', 'receipt', '2026-05-21', '', [])
+
+    const body = JSON.parse(mockFetch.mock.calls[0][1].body)
+    const systemContent: string = body.messages[0].content
+    expect(systemContent).not.toContain('Existing categories')
+  })
+
   it('does not inject merchant section when context is empty string', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,

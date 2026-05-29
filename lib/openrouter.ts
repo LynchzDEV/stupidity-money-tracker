@@ -58,8 +58,12 @@ export async function extractFromImage(
   mode: 'receipt' | 'bank_slip' = 'receipt',
   today = new Date().toISOString().split('T')[0],
   merchantContext?: string,
+  existingCategories?: string[],
 ): Promise<ExtractionResult> {
   let systemPrompt = SYSTEM_PROMPT_BASE + `\nToday's date (CE): ${today}\n`
+  if (existingCategories && existingCategories.length > 0) {
+    systemPrompt += `\nExisting categories already used in this book (most used first):\n${existingCategories.join(', ')}\nIf this transaction fits one of these existing categories, reuse that EXACT category string (copy it character-for-character, including any Thai text). Match by meaning, not exact spelling. Only invent a new category name when none of the existing ones fit.\n`
+  }
   if (merchantContext) {
     systemPrompt += `\nMerchant history from this book (use to pick the most frequent category when the merchant name matches):\n${merchantContext}\n`
   }

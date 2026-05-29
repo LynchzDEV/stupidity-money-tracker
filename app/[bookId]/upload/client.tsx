@@ -645,6 +645,7 @@ export function UploadPageClient({
           extraction={extraction}
           previewUrl={previewUrl}
           bookName={book.name}
+          bookId={book.id}
           onSave={handleSave}
           onDiscard={() => setStage('idle')}
         />

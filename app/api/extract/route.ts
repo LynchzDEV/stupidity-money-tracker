@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth'
 import { uploadAsset } from '@/lib/immich'
 import { extractFromImage } from '@/lib/openrouter'
 import { buildMerchantSummary } from '@/lib/merchant-summary'
+import { listBookCategories } from '@/lib/book-categories'
 
 export async function POST(req: Request) {
   const session = await auth()
@@ -17,13 +18,14 @@ export async function POST(req: Request) {
   const buffer = Buffer.from(await file.arrayBuffer())
   const base64 = buffer.toString('base64')
 
-  // Run Immich upload and merchant summary in parallel, then call AI
-  const [assetId, merchantContext] = await Promise.all([
+  // Run Immich upload, merchant summary, and category list in parallel, then call AI
+  const [assetId, merchantContext, existingCategories] = await Promise.all([
     uploadAsset(buffer, file.name || 'receipt.jpg', file.type || 'image/jpeg'),
     bookId ? buildMerchantSummary(bookId) : Promise.resolve(''),
+    bookId ? listBookCategories(bookId) : Promise.resolve([]),
   ])
 
-  const extraction = await extractFromImage(base64, mode, undefined, merchantContext || undefined)
+  const extraction = await extractFromImage(base64, mode, undefined, merchantContext || undefined, existingCategories)
 
   return NextResponse.json({ assetId, extraction })
 }

@@ -17,6 +17,7 @@ interface ConfirmSheetProps {
   extraction: ExtractionResult
   previewUrl: string
   bookName: string
+  bookId: string
   onSave: (data: { amount: number; type: string; category: string; date: string; note: string; merchantName?: string }) => void
   onDiscard: () => void
 }
@@ -46,7 +47,7 @@ function DataChip({ children, kind }: { children: React.ReactNode; kind?: 'expen
   )
 }
 
-export function ConfirmSheet({ extraction, previewUrl, bookName, onSave, onDiscard }: ConfirmSheetProps) {
+export function ConfirmSheet({ extraction, previewUrl, bookName, bookId, onSave, onDiscard }: ConfirmSheetProps) {
   const [amount, setAmount] = useState(extraction.amount ?? 0)
   const [type, setType] = useState(extraction.type ?? '')
   const [category, setCategory] = useState(extraction.category ?? 'Other')
@@ -115,7 +116,7 @@ export function ConfirmSheet({ extraction, previewUrl, bookName, onSave, onDisca
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ extraction: currentExtraction, history: chatHistory, userMessage: text, language }),
+        body: JSON.stringify({ extraction: currentExtraction, history: chatHistory, userMessage: text, language, bookId }),
       })
       const data = await res.json()
       const updates = data.updates ?? {}

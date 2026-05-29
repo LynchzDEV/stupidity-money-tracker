@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
+import { listBookCategories } from '@/lib/book-categories'
 
 interface ChatMessage {
   role: 'user' | 'ai'
@@ -20,14 +21,20 @@ export async function POST(req: Request) {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { extraction, history, userMessage, language } = await req.json() as {
+  const { extraction, history, userMessage, language, bookId } = await req.json() as {
     extraction: Extraction
     history: ChatMessage[]
     userMessage: string
     language?: 'auto' | 'th' | 'en'
+    bookId?: string
   }
 
   const today = new Date().toISOString().split('T')[0]
+
+  const existingCategories = bookId ? await listBookCategories(bookId) : []
+  const categoryGuidance = existingCategories.length > 0
+    ? `\n\nCategories already used in this book (most used first): ${existingCategories.join(', ')}\nWhen the user's wording refers to one of these — even loosely, abbreviated, or as a shorter phrase (e.g. "ชาร์จรถ" → "ชาร์จรถไฟฟ้า") — reuse that EXACT existing category string character-for-character. Only set a brand-new category when the user clearly means something not in this list.`
+    : ''
 
   const persona = language === 'th'
     ? 'คุณเป็นผู้จัดการสาวที่ช่วยผู้ใช้แก้ไขข้อมูลรายการจากสลิปหรือใบเสร็จ พูดเพราะและสุภาพ'
@@ -47,7 +54,7 @@ Current transaction data:
 ${JSON.stringify({ amount: extraction.amount, type: extraction.type, category: extraction.category, date: extraction.date, note: extraction.note, merchantName: extraction.merchantName }, null, 2)}
 
 Types: "income" (money received) or "expense" (money spent)
-Category: any descriptive label the user wants — common ones are Food, Transport, Bills, Shopping, Transfer, Salary, Other, but the user can create any custom category they like.
+Category: any descriptive label the user wants — common ones are Food, Transport, Bills, Shopping, Transfer, Salary, Other, but the user can create any custom category they like.${categoryGuidance}
 
 Based on the user's message, decide what fields to update. When the user mentions any date or time reference — including "yesterday", "today", "last Monday", "3 days ago", "May 20", or any other relative or absolute expression — resolve it to YYYY-MM-DD using today's date as the reference point and include it in updates.date.
 
