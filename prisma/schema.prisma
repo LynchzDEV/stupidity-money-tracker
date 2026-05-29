@@ -19,15 +19,16 @@ model User {
 }
 
 model Book {
-  id           String        @id @default(cuid())
-  name         String
-  emoji        String        @default("📒")
-  isDefault    Boolean       @default(false)
-  userId       String
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  transactions Transaction[]
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id             String          @id @default(cuid())
+  name           String
+  emoji          String          @default("📒")
+  isDefault      Boolean         @default(false)
+  userId         String
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions   Transaction[]
+  recurringRules RecurringRule[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 
   @@index([userId])
 }
@@ -44,10 +45,32 @@ model Transaction {
   confidenceJson Json?
   bookId         String
   book           Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  recurringRuleId String?
+  recurringRule   RecurringRule? @relation(fields: [recurringRuleId], references: [id], onDelete: SetNull)
   createdAt      DateTime @default(now())
 
   @@index([bookId])
   @@index([bookId, date])
+}
+
+model RecurringRule {
+  id            String        @id @default(cuid())
+  bookId        String
+  book          Book          @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  amount        Int           // satang (THB × 100)
+  type          String        // "income" | "expense"
+  category      String
+  note          String?
+  merchantName  String?
+  dayOfMonth    Int           // 1-31, clamped to month length when generating
+  startPeriod   String        // "YYYY-MM" — first month this rule is active
+  endPeriod     String?       // "YYYY-MM" — last active month, null = open-ended
+  lastRunPeriod String?       // "YYYY-MM" — last period confirmed or skipped
+  isActive      Boolean       @default(true)
+  transactions  Transaction[]
+  createdAt     DateTime      @default(now())
+
+  @@index([bookId, isActive])
 }
 
 // NextAuth required models
