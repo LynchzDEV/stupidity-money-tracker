@@ -14,6 +14,13 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   const body = await req.json()
 
+  if (body.resetDay != null) {
+    const d = Number(body.resetDay)
+    if (!Number.isInteger(d) || d < 1 || d > 31) {
+      return NextResponse.json({ error: 'resetDay must be an integer 1-31' }, { status: 400 })
+    }
+  }
+
   // Setting a new default: unset all others first
   if (body.isDefault === true) {
     await prisma.book.updateMany({
@@ -28,6 +35,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       ...(body.name != null && { name: body.name }),
       ...(body.emoji != null && { emoji: body.emoji }),
       ...(body.isDefault != null && { isDefault: body.isDefault }),
+      ...(body.resetDay != null && { resetDay: Number(body.resetDay) }),
     },
   })
   return NextResponse.json(updated)

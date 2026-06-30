@@ -5,7 +5,9 @@ import Link from 'next/link'
 import { TabBar } from '@/components/tab-bar'
 import { RecentTransactions } from '@/components/recent-transactions'
 import { RecurringReminders } from '@/components/recurring-reminders'
+import { PeriodPicker } from '@/components/period-picker'
 import { listDueReminders } from '@/lib/recurring-reminders'
+import { currentPeriod, daysUntil } from '@/lib/period'
 
 const CAT_COLORS: Record<string, string> = {
   Food: '#b2492c', Transport: '#a07212', Shopping: '#3a7d52',
@@ -25,11 +27,10 @@ export default async function DashboardPage({ params }: { params: Promise<{ book
   if (!book) notFound()
 
   const now = new Date()
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1)
+  const { start: periodStart, end: periodEnd } = currentPeriod(now, book.resetDay)
 
   const transactions = await prisma.transaction.findMany({
-    where: { bookId, date: { gte: monthStart, lt: monthEnd } },
+    where: { bookId, date: { gte: periodStart, lt: periodEnd } },
     orderBy: { date: 'desc' },
   })
 
@@ -42,11 +43,9 @@ export default async function DashboardPage({ params }: { params: Promise<{ book
   const cats = [...catMap.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5)
   const maxCat = cats[0]?.[1] ?? 1
 
-  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
-  const remainingDays = daysInMonth - now.getDate()
+  const remainingDays = daysUntil(now, periodEnd)
   const perDaySatang = remainingDays > 0 && netSatang > 0 ? Math.floor(netSatang / remainingDays) : null
 
-  const month = now.toLocaleString('en-US', { month: 'long', year: 'numeric' })
   const recent = transactions.slice(0, 10).map(t => ({ ...t, date: t.date.toISOString() }))
   const dueReminders = await listDueReminders(bookId, now)
 
@@ -69,7 +68,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ book
         </Link>
       </div>
 
-      <div className="px-5 mt-2 text-[13px]" style={{ color: 'var(--muted)' }}>{month} · Month so far</div>
+      <PeriodPicker bookId={bookId} resetDay={book.resetDay} startISO={periodStart.toISOString()} endISO={periodEnd.toISOString()} />
 
       {dueReminders.length > 0 && (
         <div className="px-5 mt-3">
