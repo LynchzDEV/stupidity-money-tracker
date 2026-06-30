@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Book" ADD COLUMN     "resetDay" INTEGER NOT NULL DEFAULT 1;
