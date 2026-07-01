@@ -14,6 +14,8 @@ model User {
   emailVerified  DateTime?
   createdAt      DateTime @default(now())
   books     Book[]
+  memberships   BookMember[]
+  expenseShares ExpenseShare[]
   accounts  Account[]
   sessions  Session[]
 }
@@ -28,10 +30,39 @@ model Book {
   user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions   Transaction[]
   recurringRules RecurringRule[]
+  members        BookMember[]
+  invites        BookInvite[]
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 
   @@index([userId])
+}
+
+model BookMember {
+  id        String   @id @default(cuid())
+  bookId    String
+  book      Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String   @default("member") // "owner" | "member"
+  createdAt DateTime @default(now())
+
+  @@unique([bookId, userId])
+  @@index([userId])
+  @@index([bookId])
+}
+
+model BookInvite {
+  id             String   @id @default(cuid())
+  bookId         String
+  book           Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  email          String   // invitee gmail — resolved to a member on their next login, no email sent
+  role           String   @default("member")
+  invitedByEmail String?
+  createdAt      DateTime @default(now())
+
+  @@unique([bookId, email])
+  @@index([email])
 }
 
 model Transaction {
@@ -44,14 +75,32 @@ model Transaction {
   merchantName   String?
   immichAssetId  String?
   confidenceJson Json?
+  splitMode      String?  // null = not split, "equal" | "manual"
   bookId         String
   book           Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
   recurringRuleId String?
   recurringRule   RecurringRule? @relation(fields: [recurringRuleId], references: [id], onDelete: SetNull)
+  shares         ExpenseShare[]
   createdAt      DateTime @default(now())
 
   @@index([bookId])
   @@index([bookId, date])
+}
+
+model ExpenseShare {
+  id            String      @id @default(cuid())
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amountOwed    Int         // satang (THB × 100)
+  slipAssetId   String?     // Immich asset id of the uploaded slip
+  paidAt        DateTime?
+  createdAt     DateTime    @default(now())
+
+  @@unique([transactionId, userId])
+  @@index([userId])
+  @@index([transactionId])
 }
 
 model RecurringRule {
