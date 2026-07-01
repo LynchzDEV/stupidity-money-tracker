@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { findAccessibleBook } from '@/lib/book-access'
 import { thbToSatang } from '@/lib/utils'
 
 export async function GET(req: Request) {
@@ -15,12 +16,12 @@ export async function GET(req: Request) {
   const search = searchParams.get('search')
 
   if (bookId) {
-    const book = await prisma.book.findFirst({ where: { id: bookId, userId: session.user.id } })
+    const book = await findAccessibleBook(bookId, session.user.id)
     if (!book) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
   const where: Record<string, unknown> = {
-    book: { userId: session.user.id },
+    book: { members: { some: { userId: session.user.id } } },
     ...(bookId && { bookId }),
     ...(category && { category }),
     ...(type && { type }),
@@ -53,7 +54,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'bookId, amount, type, category, date required' }, { status: 400 })
   }
 
-  const book = await prisma.book.findFirst({ where: { id: bookId, userId: session.user.id } })
+  const book = await findAccessibleBook(bookId, session.user.id)
   if (!book) return NextResponse.json({ error: 'Book not found' }, { status: 404 })
 
   const tx = await prisma.transaction.create({

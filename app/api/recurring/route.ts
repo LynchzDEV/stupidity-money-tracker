@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { findAccessibleBook } from '@/lib/book-access'
 import { thbToSatang } from '@/lib/utils'
 import { periodOf } from '@/lib/recurring'
 import { listDueReminders } from '@/lib/recurring-reminders'
@@ -13,7 +14,7 @@ export async function GET(req: Request) {
   const bookId = searchParams.get('bookId')
   if (!bookId) return NextResponse.json({ error: 'bookId required' }, { status: 400 })
 
-  const book = await prisma.book.findFirst({ where: { id: bookId, userId: session.user.id } })
+  const book = await findAccessibleBook(bookId, session.user.id)
   if (!book) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const reminders = await listDueReminders(bookId)
@@ -31,7 +32,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'bookId, amount, type, category, date required' }, { status: 400 })
   }
 
-  const book = await prisma.book.findFirst({ where: { id: bookId, userId: session.user.id } })
+  const book = await findAccessibleBook(bookId, session.user.id)
   if (!book) return NextResponse.json({ error: 'Book not found' }, { status: 404 })
 
   const seed = new Date(date)

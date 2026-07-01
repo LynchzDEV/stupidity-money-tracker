@@ -8,6 +8,7 @@ import { RecurringReminders } from '@/components/recurring-reminders'
 import { PeriodPicker } from '@/components/period-picker'
 import { listDueReminders } from '@/lib/recurring-reminders'
 import { currentPeriod, daysUntil } from '@/lib/period'
+import { findAccessibleBook } from '@/lib/book-access'
 
 const CAT_COLORS: Record<string, string> = {
   Food: '#b2492c', Transport: '#a07212', Shopping: '#3a7d52',
@@ -23,7 +24,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ book
   if (!session?.user?.id) redirect('/login')
 
   const { bookId } = await params
-  const book = await prisma.book.findFirst({ where: { id: bookId, userId: session.user.id } })
+  const book = await findAccessibleBook(bookId, session.user.id)
   if (!book) notFound()
 
   const now = new Date()

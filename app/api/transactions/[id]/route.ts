@@ -9,7 +9,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   const { id } = await params
   const tx = await prisma.transaction.findFirst({
-    where: { id, book: { userId: session.user.id } },
+    where: { id, book: { members: { some: { userId: session.user.id } } } },
   })
   if (!tx) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
@@ -33,7 +33,7 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ id: str
 
   const { id } = await params
   const tx = await prisma.transaction.findFirst({
-    where: { id, book: { userId: session.user.id } },
+    where: { id, book: { members: { some: { userId: session.user.id } } } },
   })
   if (!tx) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 

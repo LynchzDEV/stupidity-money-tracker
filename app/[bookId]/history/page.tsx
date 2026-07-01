@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { redirect, notFound } from 'next/navigation'
 import { HistoryClient } from './client'
 import { paramsToFilters } from '@/lib/search'
+import { findAccessibleBook } from '@/lib/book-access'
 
 export default async function HistoryPage({
   params,
@@ -28,9 +29,7 @@ export default async function HistoryPage({
 
   const { bookId } = await params
   const sp = await searchParams
-  const book = await prisma.book.findFirst({
-    where: { id: bookId, userId: session.user.id },
-  })
+  const book = await findAccessibleBook(bookId, session.user.id)
   if (!book) notFound()
 
   const where: Record<string, unknown> = { bookId }
