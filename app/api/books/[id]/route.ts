@@ -1,15 +1,14 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { findAccessibleBook, getBookRole, memberFilter } from '@/lib/book-access'
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
-  const book = await prisma.book.findFirst({
-    where: { id, userId: session.user.id },
-  })
+  const book = await findAccessibleBook(id, session.user.id)
   if (!book) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const body = await req.json()
@@ -21,10 +20,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     }
   }
 
-  // Setting a new default: unset all others first
+  // Setting a new default: unset it across the caller's accessible books first
   if (body.isDefault === true) {
     await prisma.book.updateMany({
-      where: { userId: session.user.id },
+      where: memberFilter(session.user.id),
       data: { isDefault: false },
     })
   }
@@ -46,8 +45,12 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ id: str
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
-  await prisma.book.deleteMany({
-    where: { id, userId: session.user.id },
-  })
+  const role = await getBookRole(id, session.user.id)
+  if (role !== 'owner') {
+    return NextResponse.json({ error: 'Only the owner can delete this book' }, { status: 403 })
+  }
+
+  // Cascade removes members, invites, transactions, and their shares.
+  await prisma.book.delete({ where: { id } })
   return new NextResponse(null, { status: 204 })
 }

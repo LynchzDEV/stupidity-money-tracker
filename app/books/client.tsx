@@ -2,23 +2,40 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { CardContainer, CardBody, CardItem } from '@/components/aceternity/card-3d'
-import { Star, Plus } from 'lucide-react'
+import { Star, Plus, Users, Settings2, Check } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
+import { BookManageSheet } from '@/components/book-manage-sheet'
 
 interface Book {
   id: string
   name: string
   emoji: string
   isDefault: boolean
+  role: string
   updatedAt: Date
   _count: { transactions: number }
 }
 
-export function BookSelectorClient({ books: initial }: { books: Book[] }) {
+interface Invite {
+  id: string
+  email: string
+  book: { id: string; name: string; emoji: string }
+}
+
+interface BookSelectorClientProps {
+  books: Book[]
+  invites: Invite[]
+  currentUserId: string
+}
+
+export function BookSelectorClient({ books: initial, invites: initialInvites, currentUserId }: BookSelectorClientProps) {
   const router = useRouter()
   const [books, setBooks] = useState(initial)
+  const [invites, setInvites] = useState(initialInvites)
   const [creating, setCreating] = useState(false)
   const [newName, setNewName] = useState('')
+  const [manageBook, setManageBook] = useState<Book | null>(null)
+  const [busyInvite, setBusyInvite] = useState<string | null>(null)
 
   async function handleSetDefault(bookId: string) {
     await fetch(`/api/books/${bookId}`, {
@@ -40,14 +57,72 @@ export function BookSelectorClient({ books: initial }: { books: Book[] }) {
     router.push(`/${book.id}/upload`)
   }
 
+  async function acceptInvite(inviteId: string, bookId: string) {
+    setBusyInvite(inviteId)
+    const res = await fetch(`/api/invites/${inviteId}`, { method: 'POST' })
+    setBusyInvite(null)
+    if (res.ok) {
+      setInvites(invites.filter(i => i.id !== inviteId))
+      router.push(`/${bookId}/upload`)
+    }
+  }
+
+  async function declineInvite(inviteId: string) {
+    setBusyInvite(inviteId)
+    const res = await fetch(`/api/invites/${inviteId}`, { method: 'DELETE' })
+    setBusyInvite(null)
+    if (res.ok) setInvites(invites.filter(i => i.id !== inviteId))
+  }
+
+  function removeBook(bookId: string) {
+    setBooks(books.filter(b => b.id !== bookId))
+    setManageBook(null)
+  }
+
   return (
     <main className="min-h-[100dvh] bg-[var(--bg)] px-5 pt-16 pb-8">
       <h1 className="font-[family-name:var(--font-serif)] text-3xl text-[var(--ink)] mb-1">
         Your Books
       </h1>
-      <p className="text-[var(--muted)] text-sm mb-8">
+      <p className="text-[var(--muted)] text-sm mb-6">
         Tap to open · Tap star to set default
       </p>
+
+      {invites.length > 0 && (
+        <div className="mb-6 flex flex-col gap-2.5">
+          {invites.map(inv => (
+            <div
+              key={inv.id}
+              className="rounded-2xl p-3.5 flex items-center gap-3"
+              style={{ background: 'var(--accent-soft)', border: '1px solid var(--accent-mid)' }}
+            >
+              <div className="text-2xl">{inv.book.emoji}</div>
+              <div className="min-w-0 flex-1">
+                <div className="text-[13.5px] font-semibold text-[var(--ink)] truncate">
+                  Invitation to “{inv.book.name}”
+                </div>
+                <div className="text-[12px] text-[var(--muted)]">You were invited to this shared book</div>
+              </div>
+              <button
+                onClick={() => declineInvite(inv.id)}
+                disabled={busyInvite === inv.id}
+                className="text-[13px] font-medium text-[var(--muted)] px-2.5 py-1.5 rounded-lg active:opacity-60 disabled:opacity-40"
+              >
+                Decline
+              </button>
+              <button
+                onClick={() => acceptInvite(inv.id, inv.book.id)}
+                disabled={busyInvite === inv.id}
+                className="text-[13px] font-semibold text-white px-3 py-1.5 rounded-lg flex items-center gap-1 active:scale-95 disabled:opacity-40"
+                style={{ background: 'var(--accent)' }}
+              >
+                <Check size={14} />
+                Accept
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-4">
         {books.map((book) => (
@@ -69,21 +144,33 @@ export function BookSelectorClient({ books: initial }: { books: Book[] }) {
                     />
                   )}
                   <div className="text-3xl mb-2">{book.emoji}</div>
-                  <div className="font-semibold text-[var(--ink)] text-sm">{book.name}</div>
+                  <div className="font-semibold text-[var(--ink)] text-sm flex items-center gap-1.5">
+                    {book.name}
+                    {book.role !== 'owner' && <Users size={12} className="text-[var(--muted)]" />}
+                  </div>
                   <div className="text-xs text-[var(--muted)] mt-0.5">
                     {book._count.transactions} entries
                   </div>
                   <div className="text-xs text-[var(--muted)]">
                     {formatDistanceToNow(new Date(book.updatedAt), { addSuffix: true })}
                   </div>
-                  {!book.isDefault && (
+                  <div className="mt-3 flex gap-2">
+                    {!book.isDefault && (
+                      <button
+                        className="flex-1 text-xs text-[var(--muted)] border border-[var(--hairline)] rounded-full px-2.5 py-1"
+                        onClick={(e) => { e.stopPropagation(); handleSetDefault(book.id) }}
+                      >
+                        Set default ☆
+                      </button>
+                    )}
                     <button
-                      className="mt-3 text-xs text-[var(--muted)] border border-[var(--hairline)] rounded-full px-2.5 py-1 w-full"
-                      onClick={(e) => { e.stopPropagation(); handleSetDefault(book.id) }}
+                      aria-label="Manage book"
+                      className="text-xs text-[var(--muted)] border border-[var(--hairline)] rounded-full px-2.5 py-1 flex items-center justify-center"
+                      onClick={(e) => { e.stopPropagation(); setManageBook(book) }}
                     >
-                      Set default ☆
+                      <Settings2 size={13} />
                     </button>
-                  )}
+                  </div>
                 </div>
               </CardItem>
             </CardBody>
@@ -124,6 +211,16 @@ export function BookSelectorClient({ books: initial }: { books: Book[] }) {
           </CardBody>
         </CardContainer>
       </div>
+
+      {manageBook && (
+        <BookManageSheet
+          book={manageBook}
+          currentUserId={currentUserId}
+          onClose={() => setManageBook(null)}
+          onLeft={removeBook}
+          onDeleted={removeBook}
+        />
+      )}
     </main>
   )
 }
