@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CategoryPicker } from '@/components/category-picker'
+import { SplitSection, type SplitMember } from '@/components/split-section'
 
 interface Transaction {
   id: string; amount: number; type: string; category: string
@@ -18,9 +19,12 @@ interface Props {
   onSave: (updated: Transaction) => void
   onDelete: (id: string) => void
   onClose: () => void
+  splitMembers?: SplitMember[]
+  currentUserId?: string
+  isOwner?: boolean
 }
 
-export function EditTransactionSheet({ tx, onSave, onDelete, onClose }: Props) {
+export function EditTransactionSheet({ tx, onSave, onDelete, onClose, splitMembers, currentUserId, isOwner }: Props) {
   const [amount, setAmount] = useState(satangToTHB(tx.amount))
   const [type, setType] = useState(tx.type)
   const [category, setCategory] = useState(tx.category)
@@ -191,6 +195,18 @@ export function EditTransactionSheet({ tx, onSave, onDelete, onClose }: Props) {
                   {stopping ? '…' : 'Stop'}
                 </button>
               </div>
+            )}
+
+            {/* Split (shared books only) */}
+            {splitMembers && splitMembers.length >= 2 && currentUserId && (
+              <SplitSection
+                txId={tx.id}
+                amount={tx.amount}
+                type={type}
+                members={splitMembers}
+                currentUserId={currentUserId}
+                isOwner={!!isOwner}
+              />
             )}
 
             {/* Actions */}

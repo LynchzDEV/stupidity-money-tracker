@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { redirect, notFound } from 'next/navigation'
 import { HistoryClient } from './client'
 import { paramsToFilters } from '@/lib/search'
-import { findAccessibleBook } from '@/lib/book-access'
+import { findAccessibleBook, getBookRole } from '@/lib/book-access'
 
 export default async function HistoryPage({
   params,
@@ -31,6 +31,16 @@ export default async function HistoryPage({
   const sp = await searchParams
   const book = await findAccessibleBook(bookId, session.user.id)
   if (!book) notFound()
+
+  const [memberRows, role] = await Promise.all([
+    prisma.bookMember.findMany({
+      where: { bookId },
+      include: { user: { select: { id: true, name: true, email: true } } },
+      orderBy: { createdAt: 'asc' },
+    }),
+    getBookRole(bookId, session.user.id),
+  ])
+  const members = memberRows.map(m => ({ id: m.user.id, name: m.user.name, email: m.user.email }))
 
   const where: Record<string, unknown> = { bookId }
 
@@ -74,6 +84,9 @@ export default async function HistoryPage({
       allCategories={allCats.map(t => t.category).sort()}
       query={sp.q ?? ''}
       initialAiMode={!!sp.aiMode}
+      members={members}
+      currentUserId={session.user.id}
+      isOwner={role === 'owner'}
     />
   )
 }

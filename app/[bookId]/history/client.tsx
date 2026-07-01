@@ -8,6 +8,7 @@ import { TabBar } from '@/components/tab-bar'
 import { EditTransactionSheet } from '@/components/edit-transaction-sheet'
 import { isNaturalLanguage, filtersToParams } from '@/lib/search'
 import type { AiSearchFilters } from '@/lib/search'
+import type { SplitMember } from '@/components/split-section'
 
 interface Book { id: string; name: string; emoji: string }
 interface Transaction {
@@ -43,7 +44,7 @@ function dayLabel(dateStr: string) {
   return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long' })
 }
 
-export function HistoryClient({ book, transactions: initial, allCategories, query, initialAiMode }: { book: Book; transactions: Transaction[]; allCategories: string[]; query: string; initialAiMode: boolean }) {
+export function HistoryClient({ book, transactions: initial, allCategories, query, initialAiMode, members, currentUserId, isOwner }: { book: Book; transactions: Transaction[]; allCategories: string[]; query: string; initialAiMode: boolean; members: SplitMember[]; currentUserId: string; isOwner: boolean }) {
   const router = useRouter()
   const pathname = usePathname()
   const [, startTransition] = useTransition()
@@ -322,6 +323,9 @@ className="rounded-[6px] object-cover flex-shrink-0"
           onSave={handleSaved}
           onDelete={handleDeleted}
           onClose={() => setEditing(null)}
+          splitMembers={members}
+          currentUserId={currentUserId}
+          isOwner={isOwner}
         />
       )}
     </main>
