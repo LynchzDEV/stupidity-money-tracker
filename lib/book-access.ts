@@ -6,28 +6,39 @@ export function memberFilter(userId: string): Prisma.BookWhereInput {
   return { members: { some: { userId } } }
 }
 
-export function findAccessibleBook(bookId: string, userId: string) {
-  return prisma.book.findFirst({ where: { id: bookId, members: { some: { userId } } } })
+export async function findAccessibleBook(bookId: string, userId: string) {
+  const book = await prisma.book.findFirst({
+    where: { id: bookId, members: { some: { userId } } },
+    include: { members: { where: { userId }, select: { isDefault: true } } },
+  })
+  if (!book) return null
+  const { members, ...rest } = book
+  return { ...rest, isDefault: members[0]?.isDefault ?? false }
 }
 
-export function listAccessibleBooks(userId: string) {
-  return prisma.book.findMany({
+export async function listAccessibleBooks(userId: string) {
+  const books = await prisma.book.findMany({
     where: { members: { some: { userId } } },
-    include: { _count: { select: { transactions: true } } },
+    include: {
+      _count: { select: { transactions: true } },
+      members: { where: { userId }, select: { isDefault: true } },
+    },
     orderBy: { createdAt: 'asc' },
   })
+  return books.map(({ members, ...b }) => ({ ...b, isDefault: members[0]?.isDefault ?? false }))
 }
 
 // Create a book and register the creator as its owner in one transaction.
 export function createBookWithOwner(
   userId: string,
   data: Omit<Prisma.BookCreateInput, 'user' | 'members'>,
+  opts?: { isDefault?: boolean },
 ) {
   return prisma.book.create({
     data: {
       ...data,
       user: { connect: { id: userId } },
-      members: { create: { userId, role: 'owner' } },
+      members: { create: { userId, role: 'owner', isDefault: opts?.isDefault ?? false } },
     },
   })
 }

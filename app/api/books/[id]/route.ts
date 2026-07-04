@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { findAccessibleBook, getBookRole, memberFilter } from '@/lib/book-access'
+import { findAccessibleBook, getBookRole } from '@/lib/book-access'
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
@@ -20,23 +20,32 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     }
   }
 
-  // Setting a new default: unset it across the caller's accessible books first
+  // Default is per-member: touch only the caller's own membership rows.
   if (body.isDefault === true) {
-    await prisma.book.updateMany({
-      where: memberFilter(session.user.id),
+    await prisma.$transaction([
+      prisma.bookMember.updateMany({ where: { userId: session.user.id }, data: { isDefault: false } }),
+      prisma.bookMember.update({
+        where: { bookId_userId: { bookId: id, userId: session.user.id } },
+        data: { isDefault: true },
+      }),
+    ])
+  } else if (body.isDefault === false) {
+    await prisma.bookMember.update({
+      where: { bookId_userId: { bookId: id, userId: session.user.id } },
       data: { isDefault: false },
     })
   }
 
-  const updated = await prisma.book.update({
-    where: { id },
-    data: {
-      ...(body.name != null && { name: body.name }),
-      ...(body.emoji != null && { emoji: body.emoji }),
-      ...(body.isDefault != null && { isDefault: body.isDefault }),
-      ...(body.resetDay != null && { resetDay: Number(body.resetDay) }),
-    },
-  })
+  const bookData = {
+    ...(body.name != null && { name: body.name }),
+    ...(body.emoji != null && { emoji: body.emoji }),
+    ...(body.resetDay != null && { resetDay: Number(body.resetDay) }),
+  }
+  if (Object.keys(bookData).length > 0) {
+    await prisma.book.update({ where: { id }, data: bookData })
+  }
+
+  const updated = await findAccessibleBook(id, session.user.id)
   return NextResponse.json(updated)
 }
 

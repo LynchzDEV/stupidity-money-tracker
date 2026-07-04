@@ -37,13 +37,16 @@ export function BookSelectorClient({ books: initial, invites: initialInvites, cu
   const [manageBook, setManageBook] = useState<Book | null>(null)
   const [busyInvite, setBusyInvite] = useState<string | null>(null)
 
-  async function handleSetDefault(bookId: string) {
+  async function handleToggleDefault(bookId: string, next: boolean) {
     await fetch(`/api/books/${bookId}`, {
       method: 'PATCH',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ isDefault: true }),
+      body: JSON.stringify({ isDefault: next }),
     })
-    setBooks(books.map(b => ({ ...b, isDefault: b.id === bookId })))
+    setBooks(books.map(b => ({
+      ...b,
+      isDefault: next ? b.id === bookId : b.id === bookId ? false : b.isDefault,
+    })))
   }
 
   async function handleCreate() {
@@ -155,14 +158,16 @@ export function BookSelectorClient({ books: initial, invites: initialInvites, cu
                     {formatDistanceToNow(new Date(book.updatedAt), { addSuffix: true })}
                   </div>
                   <div className="mt-3 flex gap-2">
-                    {!book.isDefault && (
-                      <button
-                        className="flex-1 text-xs text-[var(--muted)] border border-[var(--hairline)] rounded-full px-2.5 py-1"
-                        onClick={(e) => { e.stopPropagation(); handleSetDefault(book.id) }}
-                      >
-                        Set default ☆
-                      </button>
-                    )}
+                    <button
+                      className={`flex-1 text-xs rounded-full px-2.5 py-1 border ${
+                        book.isDefault
+                          ? 'text-[var(--accent)] border-[var(--accent-mid)]'
+                          : 'text-[var(--muted)] border-[var(--hairline)]'
+                      }`}
+                      onClick={(e) => { e.stopPropagation(); handleToggleDefault(book.id, !book.isDefault) }}
+                    >
+                      {book.isDefault ? 'Default ★' : 'Set default ☆'}
+                    </button>
                     <button
                       aria-label="Manage book"
                       className="text-xs text-[var(--muted)] border border-[var(--hairline)] rounded-full px-2.5 py-1 flex items-center justify-center"

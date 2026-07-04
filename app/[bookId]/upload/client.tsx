@@ -242,13 +242,16 @@ export function UploadPageClient({
     }, 2800);
   }
 
-  async function handleSetDefault(bookId: string) {
+  async function handleToggleDefault(bookId: string, next: boolean) {
     await fetch(`/api/books/${bookId}`, {
       method: 'PATCH',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ isDefault: true }),
+      body: JSON.stringify({ isDefault: next }),
     });
-    setBookList(prev => prev.map(b => ({ ...b, isDefault: b.id === bookId })));
+    setBookList(prev => prev.map(b => ({
+      ...b,
+      isDefault: next ? b.id === bookId : b.id === bookId ? false : b.isDefault,
+    })));
   }
 
   const booksForSheet = bookList.map(b => ({
@@ -684,7 +687,7 @@ export function UploadPageClient({
         books={booksForSheet}
         currentBookId={book.id}
         onClose={() => setSheetOpen(false)}
-        onSetDefault={handleSetDefault}
+        onSetDefault={handleToggleDefault}
         onNewBook={() => {
           router.push('/books');
           setSheetOpen(false);

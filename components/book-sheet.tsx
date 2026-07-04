@@ -17,7 +17,7 @@ interface BookSheetProps {
   books: Book[]
   currentBookId: string
   onClose: () => void
-  onSetDefault: (bookId: string) => void
+  onSetDefault: (bookId: string, next: boolean) => void
   onNewBook: () => void
 }
 
@@ -99,10 +99,18 @@ export function BookSheet({ open, books, currentBookId, onClose, onSetDefault, o
                       </div>
                       {!book.isDefault && (
                         <button
-                          onClick={(e) => { e.stopPropagation(); onSetDefault(book.id) }}
+                          onClick={(e) => { e.stopPropagation(); onSetDefault(book.id, true) }}
                           className="text-[12px] text-[var(--muted)] px-2.5 py-1 rounded-full active:opacity-70 transition-opacity flex-shrink-0"
                           style={{ border: '1px solid var(--hairline)' }}>
                           Set default
+                        </button>
+                      )}
+                      {book.isDefault && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onSetDefault(book.id, false) }}
+                          className="text-[12px] px-2.5 py-1 rounded-full active:opacity-70 transition-opacity flex-shrink-0"
+                          style={{ color: 'var(--muted)', border: '1px solid var(--hairline)' }}>
+                          Unset
                         </button>
                       )}
                     </div>

@@ -24,7 +24,6 @@ model Book {
   id             String          @id @default(cuid())
   name           String
   emoji          String          @default("📒")
-  isDefault      Boolean         @default(false)
   resetDay       Int             @default(1) // tracker period start day-of-month (1-28, or 31 = last day)
   userId         String
   user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -45,6 +44,7 @@ model BookMember {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   role      String   @default("member") // "owner" | "member"
+  isDefault Boolean  @default(false) // this member's default book — per-user, not shared
   createdAt DateTime @default(now())
 
   @@unique([bookId, userId])
