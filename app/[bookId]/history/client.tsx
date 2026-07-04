@@ -151,6 +151,14 @@ export function HistoryClient({ book, transactions: initial, allCategories, quer
                 <path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h3l1.5-2h6l1.5 2h3A1.5 1.5 0 0 1 21 7.5v10A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5v-10Z"/><circle cx="12" cy="13" r="3.5"/>
               </svg>
             </Link>
+            <a href={`/api/books/${book.id}/export`} download
+              aria-label="Export CSV"
+              className="w-9 h-9 rounded-full flex items-center justify-center"
+              style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 4v11m0 0 4-4m-4 4-4-4"/><path d="M5 19h14"/>
+              </svg>
+            </a>
           </div>
         </div>
 
