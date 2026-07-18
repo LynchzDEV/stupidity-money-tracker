@@ -20,6 +20,7 @@ interface ConfirmSheetProps {
   bookId: string
   onSave: (data: { amount: number; type: string; category: string; date: string; note: string; merchantName?: string }) => void
   onDiscard: () => void
+  queueLabel?: string
 }
 
 interface ChatMsg {
@@ -47,7 +48,7 @@ function DataChip({ children, kind }: { children: React.ReactNode; kind?: 'expen
   )
 }
 
-export function ConfirmSheet({ extraction, previewUrl, bookName, bookId, onSave, onDiscard }: ConfirmSheetProps) {
+export function ConfirmSheet({ extraction, previewUrl, bookName, bookId, onSave, onDiscard, queueLabel }: ConfirmSheetProps) {
   const [amount, setAmount] = useState(extraction.amount ?? 0)
   const [type, setType] = useState(extraction.type ?? '')
   const [category, setCategory] = useState(extraction.category ?? 'Other')
@@ -156,6 +157,9 @@ export function ConfirmSheet({ extraction, previewUrl, bookName, bookId, onSave,
           style={{ background: 'rgba(255,255,255,.85)', border: '1px solid var(--hairline)' }}>
           <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
           {bookName}
+          {queueLabel && (
+            <span className="text-[var(--muted)] font-normal">· {queueLabel}</span>
+          )}
         </div>
         <div ref={langPopoverRef} style={{ position: 'relative' }}>
           <button

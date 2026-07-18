@@ -8,6 +8,23 @@ import { SavedToast } from '@/components/saved-toast';
 import { Ripple } from '@/components/aceternity/ripple';
 import { BorderBeam } from '@/components/aceternity/border-beam';
 import { RecurringBanner } from '@/components/recurring-banner';
+import {
+  createQueue,
+  markReady,
+  markRejected,
+  markError,
+  resetToReading,
+  saveCurrent,
+  skipCurrent,
+  cancelRemaining,
+  currentItem,
+  isDone,
+  readyCount,
+  summary,
+  type QueueState,
+} from '@/lib/upload-queue';
+
+const EXTRACT_CONCURRENCY = 3;
 
 type CaptureMode = 'Receipt' | 'Bank slip' | 'Manual';
 
@@ -63,6 +80,8 @@ export function UploadPageClient({
   const [captureMode, setCaptureMode] = useState<CaptureMode>('Receipt');
   const [flashOn, setFlashOn] = useState(false);
   const [flashSupported, setFlashSupported] = useState(false);
+  const [queue, setQueue] = useState<QueueState | null>(null);
+  const queueFilesRef = useRef<Record<string, File>>({});
 
   const startCamera = useCallback(async (facing: 'environment' | 'user') => {
     if (streamRef.current) {
@@ -180,6 +199,20 @@ export function UploadPageClient({
     if (file) await handleFile(file);
   }
 
+  async function extractOne(file: File, mode: 'bank_slip' | 'receipt') {
+    const form = new FormData();
+    form.append('image', file);
+    form.append('mode', mode);
+    form.append('bookId', book.id);
+    const res = await fetch('/api/extract', { method: 'POST', body: form });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(text || `HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    return { assetId: (data.assetId ?? '') as string, extraction: data.extraction };
+  }
+
   async function handleFile(file: File) {
     if (!file.type.startsWith('image/')) return;
     if (captureMode === 'Manual') {
@@ -191,30 +224,122 @@ export function UploadPageClient({
     setStage('thinking');
     setErrorMsg('');
 
-    const form = new FormData();
-    form.append('image', file);
-    form.append('mode', captureMode === 'Bank slip' ? 'bank_slip' : 'receipt');
-    form.append('bookId', book.id);
+    const mode = captureMode === 'Bank slip' ? 'bank_slip' : 'receipt';
     try {
-      const res = await fetch('/api/extract', { method: 'POST', body: form });
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || `HTTP ${res.status}`);
-      }
-      const data = await res.json();
-      setAssetId(data.assetId ?? '');
-      if (data.extraction?.rejected) {
-        setErrorMsg(data.extraction.rejectReason ?? 'This image doesn\'t look like a receipt or bank slip.');
+      const { assetId, extraction } = await extractOne(file, mode);
+      setAssetId(assetId);
+      if (extraction?.rejected) {
+        setErrorMsg(extraction.rejectReason ?? 'This image doesn\'t look like a receipt or bank slip.');
         setStage('rejected');
         return;
       }
-      setExtraction(data.extraction);
+      setExtraction(extraction);
       setStage('confirm');
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Something went wrong');
       setStage('error');
     }
   }
+
+  function extractIntoQueue(id: string, file: File, mode: 'bank_slip' | 'receipt') {
+    return extractOne(file, mode)
+      .then(({ assetId, extraction }) => {
+        if (extraction?.rejected) {
+          setQueue(q => (q ? markRejected(q, id, extraction.rejectReason ?? 'Not a receipt or bank slip.') : q));
+        } else {
+          setQueue(q => (q ? markReady(q, id, assetId, extraction) : q));
+        }
+      })
+      .catch(err => {
+        setQueue(q => (q ? markError(q, id, err instanceof Error ? err.message : 'Something went wrong') : q));
+      });
+  }
+
+  async function runExtraction(seeds: { id: string; file: File }[], mode: 'bank_slip' | 'receipt') {
+    let cursor = 0;
+    const worker = async () => {
+      while (cursor < seeds.length) {
+        const seed = seeds[cursor++];
+        await extractIntoQueue(seed.id, seed.file, mode);
+      }
+    };
+    await Promise.all(
+      Array.from({ length: Math.min(EXTRACT_CONCURRENCY, seeds.length) }, worker),
+    );
+  }
+
+  async function handleFiles(files: File[]) {
+    const imgs = files.filter(f => f.type.startsWith('image/'));
+    if (imgs.length === 0) return;
+    if (captureMode === 'Manual') {
+      router.push(`/${book.id}/manual`);
+      return;
+    }
+    if (imgs.length === 1) {
+      await handleFile(imgs[0]);
+      return;
+    }
+
+    const mode = captureMode === 'Bank slip' ? 'bank_slip' : 'receipt';
+    const seeds = imgs.map((file, i) => ({
+      id: `${Date.now()}-${i}`,
+      previewUrl: URL.createObjectURL(file),
+      file,
+    }));
+    queueFilesRef.current = Object.fromEntries(seeds.map(s => [s.id, s.file]));
+    setQueue(createQueue(seeds.map(({ id, previewUrl }) => ({ id, previewUrl }))));
+    void runExtraction(seeds.map(({ id, file }) => ({ id, file })), mode);
+  }
+
+  async function handleQueueSave(confirmed: {
+    amount: number;
+    type: string;
+    category: string;
+    date: string;
+    note: string;
+    merchantName?: string;
+  }) {
+    const item = queue && currentItem(queue);
+    await fetch('/api/transactions', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        bookId: book.id,
+        immichAssetId: item?.assetId || null,
+        ...confirmed,
+      }),
+    });
+    router.refresh();
+    setQueue(q => (q ? saveCurrent(q, confirmed.amount) : q));
+  }
+
+  function handleQueueSkip() {
+    setQueue(q => (q ? skipCurrent(q) : q));
+  }
+
+  function handleQueueRetry() {
+    const item = queue && currentItem(queue);
+    if (!item) return;
+    const file = queueFilesRef.current[item.id];
+    if (!file) return;
+    const mode = captureMode === 'Bank slip' ? 'bank_slip' : 'receipt';
+    setQueue(q => (q ? resetToReading(q, item.id) : q));
+    void extractIntoQueue(item.id, file, mode);
+  }
+
+  function handleQueueCancel() {
+    setQueue(q => (q ? cancelRemaining(q) : q));
+  }
+
+  useEffect(() => {
+    if (!queue || !isDone(queue)) return;
+    const t = setTimeout(() => {
+      queueFilesRef.current = {};
+      setQueue(null);
+      setStage('idle');
+    }, 2800);
+    return () => clearTimeout(t);
+  }, [queue]);
 
   async function handleSave(confirmed: {
     amount: number;
@@ -668,15 +793,162 @@ export function UploadPageClient({
         <SavedToast amount={extraction?.amount} bookName={book.name} />
       )}
 
+      {/* Multi-receipt queue overlay */}
+      {queue && (() => {
+        const cur = currentItem(queue);
+        const total = queue.items.length;
+        const pos = Math.min(queue.currentIndex + 1, total);
+        const ready = readyCount(queue);
+
+        const StatusStrip = (
+          <div className="flex items-center justify-center gap-1.5 flex-wrap px-8" style={{ maxWidth: 320 }}>
+            {queue.items.map((it, i) => {
+              const color =
+                it.status === 'saved' ? 'var(--accent)'
+                : it.status === 'ready' ? 'rgba(100,255,180,.9)'
+                : it.status === 'rejected' || it.status === 'error' ? 'var(--expense)'
+                : it.status === 'skipped' ? 'rgba(255,255,255,.28)'
+                : 'rgba(255,255,255,.5)';
+              const isCurrent = i === queue.currentIndex;
+              return (
+                <div key={it.id} className="rounded-full" style={{
+                  width: isCurrent ? 9 : 7, height: isCurrent ? 9 : 7,
+                  background: color,
+                  animation: it.status === 'reading' ? 'pulse-dot 1.2s ease-in-out infinite' : undefined,
+                  boxShadow: isCurrent ? `0 0 0 2px rgba(255,255,255,.25)` : undefined,
+                }} />
+              );
+            })}
+          </div>
+        );
+
+        if (isDone(queue)) {
+          const sum = summary(queue);
+          const total$ = sum.totalAmount
+            ? `฿${sum.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+            : '';
+          const notSaved = sum.skipped + sum.failed;
+          return (
+            <div className="fixed inset-0 z-50 flex flex-col items-center justify-center"
+              style={{ background: 'radial-gradient(120% 70% at 50% 42%, #2a2823 0%, #0c0d0a 70%)' }}>
+              <div className="w-[88px] h-[88px] rounded-full flex items-center justify-center animate-pop"
+                style={{ background: 'var(--accent)', boxShadow: '0 8px 32px rgba(14,92,58,.5)' }}>
+                <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 12.5l5 5L20 6.5" />
+                </svg>
+              </div>
+              <div className="mt-6 text-center text-white">
+                <div className="font-[family-name:var(--font-mono)] text-[30px] font-semibold tracking-tight">
+                  {sum.saved} saved
+                </div>
+                {total$ && <div className="text-[15px] mt-1" style={{ opacity: 0.7 }}>{total$}</div>}
+                {notSaved > 0 && (
+                  <div className="text-[13px] mt-2" style={{ color: 'rgba(255,255,255,.5)' }}>
+                    {sum.skipped > 0 && `${sum.skipped} skipped`}
+                    {sum.skipped > 0 && sum.failed > 0 && ' · '}
+                    {sum.failed > 0 && `${sum.failed} couldn’t be read`}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        }
+
+        if (!cur) return null;
+
+        if (cur.status === 'ready' && cur.extraction) {
+          return (
+            <div className="fixed inset-0 z-50">
+              <ConfirmSheet
+                key={cur.id}
+                extraction={cur.extraction as ExtractionResult}
+                previewUrl={cur.previewUrl}
+                bookName={book.name}
+                bookId={book.id}
+                queueLabel={`${pos} of ${total}`}
+                onSave={handleQueueSave}
+                onDiscard={handleQueueSkip}
+              />
+            </div>
+          );
+        }
+
+        if (cur.status === 'rejected' || cur.status === 'error') {
+          const failedTitle = cur.status === 'rejected' ? 'Not a receipt' : 'Couldn’t read this one';
+          return (
+            <div className="fixed inset-0 z-50 flex flex-col items-center justify-center px-8 gap-6"
+              style={{ background: 'rgba(15,17,14,.72)', backdropFilter: 'blur(8px)' }}>
+              <div className="rounded-2xl p-6 text-center animate-pop w-full max-w-xs"
+                style={{ background: 'var(--surface)', border: '1px solid var(--hairline)', boxShadow: 'var(--shadow-md)' }}>
+                <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3" style={{ background: 'var(--expense-bg)' }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--expense)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" />
+                  </svg>
+                </div>
+                <div className="text-[13px] font-medium mb-1" style={{ color: 'var(--muted)' }}>{pos} of {total}</div>
+                <div className="text-[15px] font-semibold text-[var(--ink)] mb-1.5">{failedTitle}</div>
+                <div className="text-[13px] leading-relaxed mb-5" style={{ color: 'var(--muted)' }}>{cur.errorMsg}</div>
+                <div className="flex gap-2">
+                  <button onClick={handleQueueRetry}
+                    className="flex-1 h-11 rounded-xl text-[14px] font-semibold active:scale-95 transition-transform"
+                    style={{ background: 'var(--surface)', border: '1px solid var(--hairline)', color: 'var(--ink)' }}>
+                    Retry
+                  </button>
+                  <button onClick={handleQueueSkip}
+                    className="flex-1 h-11 rounded-xl text-[14px] font-semibold text-white active:scale-95 transition-transform"
+                    style={{ background: 'var(--accent)' }}>
+                    {pos < total ? 'Next' : 'Finish'}
+                  </button>
+                </div>
+              </div>
+              {StatusStrip}
+            </div>
+          );
+        }
+
+        // reading (current not yet extracted)
+        return (
+          <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6"
+            style={{ background: 'rgba(0,0,0,.82)' }}>
+            {cur.previewUrl && (
+              <div className="relative rounded-2xl overflow-hidden" style={{ maxWidth: 220, boxShadow: '0 16px 48px rgba(0,0,0,.7)' }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={cur.previewUrl} alt="" className="block max-h-64 object-contain opacity-75" style={{ maxWidth: 220 }} />
+                <div className="absolute left-0 right-0 h-[2px] pointer-events-none" style={{
+                  background: 'linear-gradient(90deg, transparent, rgba(100,255,180,.9) 50%, transparent)',
+                  boxShadow: '0 0 10px 3px rgba(14,92,58,.7)',
+                  animation: 'scan-line 1.6s linear infinite',
+                }} />
+              </div>
+            )}
+            <div className="text-center">
+              <div className="text-[13px] font-medium tracking-wide" style={{ color: 'rgba(255,255,255,.6)', letterSpacing: '0.04em' }}>
+                Reading receipt {pos} of {total}
+              </div>
+              <div className="text-[11.5px] mt-1" style={{ color: 'rgba(255,255,255,.38)' }}>
+                {ready} of {total} ready
+              </div>
+            </div>
+            {StatusStrip}
+            <button onClick={handleQueueCancel}
+              className="text-[13px] font-medium active:opacity-60 transition-opacity"
+              style={{ color: 'rgba(255,255,255,.5)' }}>
+              Cancel remaining
+            </button>
+          </div>
+        );
+      })()}
+
       {/* Hidden gallery input */}
       <input
         ref={galleryRef}
         type="file"
         accept="image/*"
+        multiple
         className="hidden"
         onChange={e => {
-          const f = e.target.files?.[0];
-          if (f) handleFile(f);
+          const files = Array.from(e.target.files ?? []);
+          if (files.length) handleFiles(files);
           e.target.value = '';
         }}
       />
