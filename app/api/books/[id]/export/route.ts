@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { findAccessibleBook } from '@/lib/book-access'
-import { transactionsToCsv } from '@/lib/export-csv'
+import { transactionsToXlsx } from '@/lib/export-xlsx'
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
@@ -26,14 +26,14 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     select: { date: true, type: true, category: true, amount: true, merchantName: true, note: true },
   })
 
-  const csv = transactionsToCsv(transactions)
+  const buffer = await transactionsToXlsx(transactions, book.name)
   const slug = book.name.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'book'
   const stamp = new Date().toISOString().split('T')[0]
 
-  return new NextResponse(csv, {
+  return new NextResponse(new Uint8Array(buffer), {
     headers: {
-      'Content-Type': 'text/csv; charset=utf-8',
-      'Content-Disposition': `attachment; filename="${slug}-${stamp}.csv"`,
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': `attachment; filename="${slug}-${stamp}.xlsx"`,
     },
   })
 }

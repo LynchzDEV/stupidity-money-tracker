@@ -152,7 +152,7 @@ export function HistoryClient({ book, transactions: initial, allCategories, quer
               </svg>
             </Link>
             <a href={`/api/books/${book.id}/export`} download
-              aria-label="Export CSV"
+              aria-label="Export to Excel / Google Sheets"
               className="w-9 h-9 rounded-full flex items-center justify-center"
               style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
