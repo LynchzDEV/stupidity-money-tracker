@@ -23,8 +23,50 @@ import {
   summary,
   type QueueState,
 } from '@/lib/upload-queue';
+import { buildSourceMeta, hashFile, type SourceMeta, type UploadSource } from '@/lib/slip-source';
 
 const EXTRACT_CONCURRENCY = 3;
+
+type SlipMeta = SourceMeta & { sourceHash: string };
+
+interface ResumeMarker {
+  id: string;
+  bookId: string;
+  merchantName: string | null;
+  amount: number;
+  immichAssetId: string;
+  uploadSource: string | null;
+  sourceFileName: string | null;
+  takenAt: string;
+}
+
+interface DuplicateInfo {
+  id: string;
+  merchantName: string | null;
+  amount: number;
+  createdAt: string;
+}
+
+async function checkDuplicates(hashes: string[]): Promise<Record<string, DuplicateInfo>> {
+  try {
+    const res = await fetch('/api/transactions/dedupe', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ hashes }),
+    });
+    if (!res.ok) return {};
+    const data = await res.json();
+    return data.duplicates ?? {};
+  } catch {
+    return {};
+  }
+}
+
+function duplicateReason(dup: DuplicateInfo): string {
+  const day = new Date(dup.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  const who = dup.merchantName ? `${dup.merchantName}, ` : '';
+  return `Already uploaded ${day} (${who}฿${(dup.amount / 100).toLocaleString()})`;
+}
 
 type CaptureMode = 'Receipt' | 'Bank slip' | 'Manual';
 
@@ -56,10 +98,12 @@ export function UploadPageClient({
   book,
   books,
   dueRecurringCount = 0,
+  resumeMarker = null,
 }: {
   book: Book;
   books: Book[];
   dueRecurringCount?: number;
+  resumeMarker?: ResumeMarker | null;
 }) {
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -82,6 +126,8 @@ export function UploadPageClient({
   const [flashSupported, setFlashSupported] = useState(false);
   const [queue, setQueue] = useState<QueueState | null>(null);
   const queueFilesRef = useRef<Record<string, File>>({});
+  const queueMetaRef = useRef<Record<string, SlipMeta>>({});
+  const currentMetaRef = useRef<SlipMeta | null>(null);
 
   const startCamera = useCallback(async (facing: 'environment' | 'user') => {
     if (streamRef.current) {
@@ -196,7 +242,7 @@ export function UploadPageClient({
       return;
     }
     const file = await captureFrame();
-    if (file) await handleFile(file);
+    if (file) await handleFile(file, 'camera');
   }
 
   async function extractOne(file: File, mode: 'bank_slip' | 'receipt') {
@@ -213,7 +259,7 @@ export function UploadPageClient({
     return { assetId: (data.assetId ?? '') as string, extraction: data.extraction };
   }
 
-  async function handleFile(file: File) {
+  async function handleFile(file: File, source: UploadSource = 'gallery') {
     if (!file.type.startsWith('image/')) return;
     if (captureMode === 'Manual') {
       router.push(`/${book.id}/manual`);
@@ -223,6 +269,15 @@ export function UploadPageClient({
     setPreviewUrl(url);
     setStage('thinking');
     setErrorMsg('');
+
+    const sourceHash = await hashFile(file);
+    currentMetaRef.current = { ...buildSourceMeta(file, source), sourceHash };
+    const dup = (await checkDuplicates([sourceHash]))[sourceHash];
+    if (dup) {
+      setErrorMsg(duplicateReason(dup));
+      setStage('rejected');
+      return;
+    }
 
     const mode = captureMode === 'Bank slip' ? 'bank_slip' : 'receipt';
     try {
@@ -288,7 +343,30 @@ export function UploadPageClient({
     }));
     queueFilesRef.current = Object.fromEntries(seeds.map(s => [s.id, s.file]));
     setQueue(createQueue(seeds.map(({ id, previewUrl }) => ({ id, previewUrl }))));
-    void runExtraction(seeds.map(({ id, file }) => ({ id, file })), mode);
+    void dedupeAndExtract(seeds.map(({ id, file }) => ({ id, file })), mode);
+  }
+
+  async function dedupeAndExtract(seeds: { id: string; file: File }[], mode: 'bank_slip' | 'receipt') {
+    const hashed = await Promise.all(
+      seeds.map(async s => ({ ...s, meta: { ...buildSourceMeta(s.file, 'gallery'), sourceHash: await hashFile(s.file) } })),
+    );
+    hashed.forEach(s => { queueMetaRef.current[s.id] = s.meta; });
+
+    const dups = await checkDuplicates([...new Set(hashed.map(s => s.meta.sourceHash))]);
+    const seenInBatch = new Set<string>();
+    const fresh: { id: string; file: File }[] = [];
+    for (const s of hashed) {
+      const dup = dups[s.meta.sourceHash];
+      if (dup) {
+        setQueue(q => (q ? markRejected(q, s.id, duplicateReason(dup)) : q));
+      } else if (seenInBatch.has(s.meta.sourceHash)) {
+        setQueue(q => (q ? markRejected(q, s.id, 'Same photo picked twice in this batch') : q));
+      } else {
+        seenInBatch.add(s.meta.sourceHash);
+        fresh.push({ id: s.id, file: s.file });
+      }
+    }
+    await runExtraction(fresh, mode);
   }
 
   async function handleQueueSave(confirmed: {
@@ -306,6 +384,7 @@ export function UploadPageClient({
       body: JSON.stringify({
         bookId: book.id,
         immichAssetId: item?.assetId || null,
+        ...(item ? queueMetaRef.current[item.id] : null),
         ...confirmed,
       }),
     });
@@ -335,6 +414,7 @@ export function UploadPageClient({
     if (!queue || !isDone(queue)) return;
     const t = setTimeout(() => {
       queueFilesRef.current = {};
+      queueMetaRef.current = {};
       setQueue(null);
       setStage('idle');
     }, 2800);
@@ -355,6 +435,7 @@ export function UploadPageClient({
       body: JSON.stringify({
         bookId: book.id,
         immichAssetId: assetId || null,
+        ...currentMetaRef.current,
         ...confirmed,
       }),
     });
@@ -599,6 +680,41 @@ export function UploadPageClient({
       {stage === 'idle' && dueRecurringCount > 0 && (
         <div className="absolute left-0 right-0 z-10 flex justify-center px-4" style={{ top: 104 }}>
           <RecurringBanner bookId={book.id} count={dueRecurringCount} />
+        </div>
+      )}
+
+      {stage === 'idle' && resumeMarker && (
+        <div
+          className="absolute left-0 right-0 z-10 flex justify-center px-4"
+          style={{ top: dueRecurringCount > 0 ? 152 : 104 }}
+        >
+          <button
+            onClick={() => router.push(`/${resumeMarker.bookId}/history`)}
+            className="flex items-center active:opacity-70 transition-opacity"
+            style={{
+              gap: 8, padding: '5px 12px 5px 5px', borderRadius: 99, maxWidth: '100%',
+              background: 'rgba(20,22,18,.55)',
+              border: '1px solid rgba(255,255,255,.12)',
+              backdropFilter: 'blur(20px)',
+            }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`/api/immich/${resumeMarker.immichAssetId}/thumbnail`}
+              alt=""
+              style={{ width: 26, height: 26, borderRadius: 99, objectFit: 'cover', flexShrink: 0 }}
+            />
+            <span
+              className="truncate"
+              style={{ fontSize: 11.5, fontWeight: 500, color: 'rgba(255,255,255,.85)' }}
+            >
+              Last slip: {resumeMarker.sourceFileName ?? resumeMarker.merchantName ?? 'photo'}
+              {' · '}
+              {new Date(resumeMarker.takenAt).toLocaleString('en-GB', {
+                day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+              })}
+            </span>
+          </button>
         </div>
       )}
 
