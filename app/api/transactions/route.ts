@@ -48,7 +48,7 @@ export async function POST(req: Request) {
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json()
-  const { bookId, amount, type, category, date, note, merchantName, immichAssetId, confidenceJson } = body
+  const { bookId, amount, type, category, date, note, merchantName, immichAssetId, confidenceJson, uploadSource, sourceFileName, sourceTakenAt, sourceHash } = body
 
   if (!bookId || amount == null || !type || !category || !date) {
     return NextResponse.json({ error: 'bookId, amount, type, category, date required' }, { status: 400 })
@@ -67,6 +67,10 @@ export async function POST(req: Request) {
       note: note || null,
       merchantName: merchantName || null,
       immichAssetId: immichAssetId || null,
+      uploadSource: uploadSource === 'camera' || uploadSource === 'gallery' ? uploadSource : null,
+      sourceFileName: sourceFileName || null,
+      sourceTakenAt: sourceTakenAt && !isNaN(Date.parse(sourceTakenAt)) ? new Date(sourceTakenAt) : null,
+      sourceHash: typeof sourceHash === 'string' && /^[0-9a-f]{64}$/.test(sourceHash) ? sourceHash : null,
       confidenceJson: confidenceJson || null,
     },
   })
