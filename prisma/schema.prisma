@@ -74,6 +74,10 @@ model Transaction {
   note           String?
   merchantName   String?
   immichAssetId  String?
+  uploadSource   String?  // "camera" | "gallery"
+  sourceFileName String?
+  sourceTakenAt  DateTime?
+  sourceHash     String?
   confidenceJson Json?
   splitMode      String?  // null = not split, "equal" | "manual"
   bookId         String
@@ -85,6 +89,7 @@ model Transaction {
 
   @@index([bookId])
   @@index([bookId, date])
+  @@index([sourceHash])
 }
 
 model ExpenseShare {
